@@ -107,7 +107,7 @@
 - [Security Token Service (STS)](#sts)
 - [Identity Federation in AWS](#identity-feration-in-aws)
 - [AWS Organizations](#aws-organisation)
-- [SSO]
+- [SSO](#sso)
 
 ### Cloud Security
 - [AWS Shield](#aws-shield)
@@ -287,3 +287,160 @@ __Hibernation__
 - Under the hood: the RAM state is written to a file in the root EBS volume
 - The root EBS volume must be encrypted
 - __Instance RAM Size – must be less than 150 GB.__
+
+# S3
+- Remember that S3 is Object-based: i.e allows you to upload files.
+- Files can be 0 Bytes to 5 TB.
+- There is unlimited storage
+- Files are stored in Buckets. Bucket is tied to region, while S3 is global level 
+- Not suitable to install operating systems on S3 due to it being object based
+- You can turn on MFA delete to avoid accidental delete. 
+- __Tiered Storage__ S3 offers a range of storage classes designed for different use cases.
+- __Lifecycle Management__ Define rules to automatically transition objects to a cheaper storage tier or delete objects that are no longer required after a set period of time.
+
+__Versioning__
+- You can version your files in Amazon S3
+- Protect against unintended deletes (ability to restore a version)
+- Easy roll back to previous version 
+- With versioning, all versions of an object are stored and can be retrieved, including deleted objects. 
+
+__Amazon S3 – Replication__
+- __Must enable Versioning__ in source and destination buckets
+- __Cross-Region Replication (CRR)__
+- __Same-Region Replication (SRR)__
+- Buckets can be in different AWS accounts
+- After you enable Replication, only new objects are replicated
+- __Cross-Region Replication (CRR)__
+- After you enable Replication, only new objects are replicated
+- You can replicate existing objects using S3 __Batch Replication__
+- For DELETE operations:
+  - Replicate delete markers from source to target (optional)
+  - Permanent deletes are not replicated
+
+
+__Security__
+
+- __User based security__
+
+- IAM policies define which API calls should be allowed for a specific user
+- Preferred over bucket policy for fine-grained access control
+
+- __Resource-Based__
+
+ - __Bucket Policies__
+   - Grant public access to the bucket
+   - Force objects to be encrypted at upload
+   - Cross-account access
+ - __Object Access Control List (ACL)__ - applies to the objects while uploading
+ - __Bucket Access Control List (ACL)__ - access policy that applies to the bucket
+
+__You can encrypt objects in S3 buckets using one of 4 methods__
+- __Encryption in Transit__
+  - SSL/TLS
+  - HTTPS
+  - HTTPS is mandatory for SSE-C
+- __Server-Side Encryption (SSE)__
+  - __Server-Side Encryption with Amazon S3-Managed Keys (SSE-S3) – Enabled by Default__
+    - Encrypts S3 objects using keys handled, managed, and owned by AWS
+    - Object is encrypted server-side using AES-256
+    - Must set header: "x-amz-server-side-encryption": "AES256"
+
+  - __Server-Side Encryption with KMS Keys stored in AWS KMS (SSE-KMS)__
+    - Leverage AWS Key Management Service (AWS KMS) to manage encryption keys
+    - If you use SSE-KMS, you may be impacted by the KMS limits quotas
+    - Must set header: "x-amz-server-side-encryption": "aws:kms"
+
+  - __Server-Side Encryption with Customer-Provided Keys (SSE-C)__
+    - When you want to manage your own encryption keys
+    - Amazon S3 does NOT store the encryption key you provide
+    - HTTPS must be used
+    - Encryption key must provided in HTTP headers, for every HTTP request made
+
+
+  - __Client-Side Encryption__ 
+    - Use client libraries such as __Amazon S3 Client-Side Encryption Library__
+    - Clients must encrypt data themselves before sending to Amazon S3
+    - Clients must decrypt data themselves when retrieving from Amazon S3
+
+__Enforcing Encryption with a Bucket Policy__
+- A bucket policy can deny all PUT requests that don’t include the x-amz-server-sideencryption parameter in the request header
+
+
+__CORS__
+- If a client makes a cross-origin request on our S3 bucket, we need to enable the correct CORS headers
+- You can allow for a specific origin or for *
+
+__MFA Delete__
+- MFA will be required to:
+  - Permanently delete an object version
+  - Suspend Versioning on the bucket
+  
+__S3 Object Lock and Glacier Vault Lock__
+- Use S3 Object Lock to store objects using a __write once, read many (WORM)model__.
+- Object Lock comes in two modes: __governance mode and compliance mode.__
+  - __Governance mode__: users can’t overwrite or delete an object version or alter\
+     its lock settings unless they have special permissions
+  - __Compliance mode__: a protected object version can’t be overwritten or deleted\
+     by any user, including the root user in your AWS account
+
+__S3 Storage Classes__
+__S3 Standard – General Purpose__
+  - Used for frequently accessed data
+  - Low latency and high throughput
+  - The default storage class
+  - Use cases include websites, content distribution, mobile and gaming applications, and big data analytics
+
+__S3 Standard-Infrequent Access (S3 Standard-IA)__
+  - __Rapid Access__: Used for data that is accessed less frequently but requires rapid access when needed.
+  - There is a low per-GB storage price and a per-GB retrieval fee
+  - Use cases: __Disaster Recovery, backups__
+
+__S3 Intelligent-Tiering__
+  - Automatically moves your data to the most cost-effective tier based on how frequently you access each object.
+
+__S3 Glacier__
+- Low-cost object storage meant for archiving / backup
+- Pricing: price for storage + object retrieval cost
+- __Amazon S3 Glacier Instant Retrieval__
+  - Millisecond retrieval, great for data accessed once a quarter  
+  - Minimum storage duration of __90 days__
+- __Amazon S3 Glacier Flexible Retrieval__
+  - Expedited (1 to 5 minutes)  
+  - Standard (3 to 5 hours)
+  - Bulk (5 to 12 hours)
+  - Minimum storage duration of 90 days
+
+- __Amazon S3 Glacier Deep Archive – for long term storage__
+  - Standard (12 hours)  
+  - Bulk (48 hours)
+  - Minimum storage duration of 180 days
+
+__S3 Lifecycle Management__
+- Lifecycle management automates moving your objects between thedifferent storage tiers, thereby maximizing cost effectiveness.
+
+- __S3 performance__
+__3,500 PUT/COPY/POST/DELETE and 5,500 GET/HEAD requests per second, per prefix__ General Perf
+
+- You can get better performance by spreading your reads across different prefixes, you can achieve 11,000 requests per second with 2 prefixes.
+- If we used all 4 prefixes in the last example, you would achieve 22,000 requests per second
+- There are no limits to the number of prefixes in a bucket. 
+
+__Multipart Uploads__ Upload Perf
+- __Recommended__ for files over 100 MB
+- __Required__ for files over 5 GB
+- __Parallelize uploads__ (increases efficiency)
+
+__S3 Transfer Acceleration__
+- Increase transfer speed by transferring file to an __AWS edge location__ which will forward the data to the __S3 bucket in the target region__
+- Compatible with multi-part upload
+- Data is ingested at the nearest edge location and is transferred over AWS private network (uses CloudFront internally)
+
+__S3 Byte-Range Fetches__  Downloads Perf
+-  Parallelize downloads by specifying byte ranges.
+-  Better resilience in case of failures, since we only need to refetch the failed byte range and not the whole file
+
+__S3 Select & Glacier Select__
+- Retrieve less data using SQL by performing __server-side filtering__
+- Can filter by rows & columns (simple SQL statements)
+- Less network transfer cost
+- Less CPU cost client-side
