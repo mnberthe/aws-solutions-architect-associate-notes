@@ -3,27 +3,27 @@
 ### Compute services
 - [EC2](#ec2)
 - [Lambda](#lambda)
-- [Elastic Beanstalk](#elastic beanstalk)
+- [Elastic Beanstalk](#elasticbeanstalk)
 - [Elastic Container Registry](#ecr)
 - [Elastic Container Service](#ecs)
 - [Elastic Kubernates Service](#EKS)
 - [Fargate](#fargate)
 
 ### High availability and scalability 
- - [ELB]
- - [ASB]
- - [High Performance Computing (HPC)]
+ - [ELB](#elb)
+ - [ASB](#asb)
+ - [High Performance Computing (HPC)](#hpc)
 
 ### Storage
 - [S3](#s3)
 - [EBS](#ebs)
 - [EFS](#efs)
 - [FSx](#fsx)
-- [Storage Gateway](#storage gateway)
-- [Aws Backup](#aws backup)
-- [Snowball Edge](#snowball edge)
+- [Storage Gateway](#storagegateway)
+- [Aws Backup](#awsbackup)
+- [Snowball Edge](#snowballedge)
 - [Snowmobile](#snowmobile)
-- [Aws Transfer Family](# aws transfer family)
+- [Aws Transfer Family](# awstransferfamily)
 
 ### Database
 - [RDS](#rds)
@@ -38,13 +38,13 @@
 
 ### Data & Analytics
 - [Athena](#athena)
-- [Redshift]
+- [Redshift](#)
 - [OpenSearch(ex ElasticSearch](#openSearch)
 - [EMR](#emr)
 - [QuickSight]
 - [Glue](#glue)
 - [Lake formation](#lake formation)
-- [Kinesis Data analytics]
+- [Kinesis Data analytics](#kinesis-data-analytics)
 - [MSK Managed Streaming for Apache Kafka](#msk)
 - [Big Data Ingestion Pipeline](#data pipeline)
 
@@ -53,19 +53,19 @@
 - [RDS & Aurora Migrations](#rds & aurora)
 - [On premises strategies with aws](# on premises)
 - [MGN( Application migration service)](#mgn)
-- [Transfering large datasets]
-- [VMware cloud on aws]
+- [Transfering large datasets](#tranfer)
+- [VMware cloud on aws](#vmWare)
 
 ### Disaster Recovery 
-- [Disaster Recovery]
+- [Disaster Recovery](#disaster)
 - [Aws backup](#aws backup)
 
 ### Decoupling applications 
-- [SQS]
-- [SNS]
-- [Kinesis]
-- [Amazon MQ]
-- [Event Brigde]
+- [SQS](#sqs)
+- [SNS](#sns)
+- [Kinesis](#kinesis)
+- [Amazon MQ](#amazon-mq)
+- [Event Brigde](#event-bridge)
 - 
 ### Machine Leanrning
 - [Rekognito]
