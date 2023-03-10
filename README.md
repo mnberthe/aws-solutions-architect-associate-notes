@@ -495,7 +495,7 @@ __EBS Encryption__
   - Copy the EBS snapshot and encrypt the new copy
   - Create a new EBS volume from the encrypted snapshot (the volume will be automatically encrypted)  
 
-__EFS__
+# EFS
 - Managed NFS (network file system) that can be mounted on many EC2
 - EFS works with EC2 instances in multi-AZ
 - Highly available, scalable, expensive 
