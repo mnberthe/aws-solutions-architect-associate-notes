@@ -234,7 +234,8 @@ __Elastic IP__
 
 __Placement Groups__
 3 types of placements groups : Cluster, Spread, Partition
-__Cluster
+
+__Cluster__
 - Grouping of instances within a single Availability Zone, same hardware
 - Recommended for applications that need low network latency, high network throughput, or both.
 
@@ -252,7 +253,7 @@ __Partition__
 
 __Networking with EC2__
 
-You can attach 3 different types of __virtual networking cards__ to your EC2. \
+You can attach 3 different types of __virtual networking cards__ to your EC2.
 
 __ENI(Elastic Network Interface)__
 - An ENI is simply a virtual network card that allows:
@@ -475,7 +476,8 @@ __Only gp2/gp3 and io1/io2 can be used as boot volumes__
 __EBS SSD__
 
 - __gp2/gp3 (SSD)__ General purpose SSD volume that balances price and performance for a wide variety of workloads
-- __io1/io2 (SSD)__ Highest-performance SSD volume for mission-critical low-latency or high-throughput workloads\ Attach the same EBS volume to multiple EC2 instances in the same AZ
+- __io1/io2 (SSD)__ Highest-performance SSD volume for mission-critical low-latency or high-throughput workloads\
+Attach the same EBS volume to multiple EC2 instances in the same AZ
 
 __EBS HDD__
 
