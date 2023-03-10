@@ -504,7 +504,7 @@ __EFS__
 - Encryption at rest using KMS
 
 __EFS – Performance__
--EFS can support thousands of concurrent connections (EC2 instances).
+- EFS can support thousands of concurrent connections (EC2 instances).
 - EFS can handle up to 10 Gbps in throughput.
 - Scale your storage to petabytes.
 
@@ -536,7 +536,7 @@ __Amazon FSx for Lustre__
 - Media Data Processing Workflows
 
 
-__ How differ  EFS, FSx for Windows, or FSx for Lustre__
+__How differ  EFS, FSx for Windows, or FSx for Lustre__
 - __EFS__: When you need distributed, highly resilient storage for Linux instances and Linux-based applications.
 - __Amazon FSx__ for Windows: When you need centralized storage for Windows-based applications, such as SharePoint\ Microsoft SQL Server, Workspaces, IIS Web Server, or any other native Microsoft application.
-- __Amazon FSx for Lustre__: When you need high-speed, high-capacity distributed storage. This will be for\ applications that do high performance computing (HPC), financial modeling, etc.\ Remember that FSx for Lustre can store data directly on S3
+- __Amazon FSx for Lustre__ When you need high-speed, high-capacity distributed storage. This will be for\ applications that do high performance computing (HPC), financial modeling, etc.\ Remember that FSx for Lustre can store data directly on S3
