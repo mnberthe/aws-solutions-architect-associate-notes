@@ -23,7 +23,7 @@
 - [Aws Backup](#awsbackup)
 - [Snowball Edge](#snowballedge)
 - [Snowmobile](#snowmobile)
-- [Aws Transfer Family](# awstransferfamily)
+- [Aws Transfer Family](#awstransferfamily)
 
 ### Database
 - [RDS](#rds)
@@ -39,26 +39,26 @@
 ### Data & Analytics
 - [Athena](#athena)
 - [Redshift](#)
-- [OpenSearch(ex ElasticSearch](#openSearch)
+- [OpenSearch(ex ElasticSearch)](#openSearch)
 - [EMR](#emr)
-- [QuickSight]
+- [QuickSight](#quickSight)
 - [Glue](#glue)
-- [Lake formation](#lake formation)
+- [Lake formation](#lake-formation)
 - [Kinesis Data analytics](#kinesis-data-analytics)
 - [MSK Managed Streaming for Apache Kafka](#msk)
-- [Big Data Ingestion Pipeline](#data pipeline)
+- [Big Data Ingestion Pipeline](#data-pipeline)
 
 ###  Migration
 - [DMS(Database Migration Service)](#dms)
-- [RDS & Aurora Migrations](#rds & aurora)
-- [On premises strategies with aws](# on premises)
+- [RDS & Aurora Migrations](#rds-aurora)
+- [On premises strategies with aws](#on-premises)
 - [MGN( Application migration service)](#mgn)
 - [Transfering large datasets](#tranfer)
 - [VMware cloud on aws](#vmWare)
 
 ### Disaster Recovery 
 - [Disaster Recovery](#disaster)
-- [Aws backup](#aws backup)
+- [Aws backup](#aws-backup)
 
 ### Decoupling applications 
 - [SQS](#sqs)
@@ -66,62 +66,61 @@
 - [Kinesis](#kinesis)
 - [Amazon MQ](#amazon-mq)
 - [Event Brigde](#event-bridge)
-- 
+
 ### Machine Leanrning
-- [Rekognito]
-- [Transcribe]
-- [Polly]
-- [Translate]
-- [Lex]
-- [Comprehend]
-- [Comprehend Medical]
-- [SageMaker]
-- [Forecast]
-- [Kendra]
-- [Personalize] 
-- [Textract]
+- [Rekognito](#rekognito)
+- [Transcribe](#transcribe)
+- [Polly](#polly)
+- [Translate](#emr)
+- [Lex](#emr)
+- [Comprehend](#emr)
+- [Comprehend Medical](#emr)
+- [SageMaker](#emr)
+- [Forecast](#emr)
+- [Kendra](#emr)
+- [Personalize](#emr)
+- [Textract](#emr)
 
 ### Networking
-- [Route 53]
-- [API Gateway]
-- [VPC]
-- [VPN]
-- [Direct connect]
-- [Transit Gateway]
+- [Route 53](#route53)
+- [API Gateway](#api-gateway)
+- [VPC](#vpc)
+- [VPN](#vpn)
+- [Direct connect](#direct-connect)
+- [Transit Gateway](#transit-gateway)
 
 ### Content delivery
-- [CloudFront]
-- [Global Accelerator]
+- [CloudFront](#cloudfront)
+- [Global Accelerator](#global-accelerator)
 
 ### Parameters & Encryption
-- [Key Management Service (KMS)]
-- [SSM Parameter Store]
-- [Secrets Manager]
-- [CloudHSM]
-- [OpsWorks]
+- [Key Management Service (KMS)](#kms)
+- [SSM Parameter Store](#ssm)
+- [Secrets Manager](#secret)
+- [CloudHSM](#cloudHsm)
+- [OpsWorks](#opsworks)
 
 
 ### Access Management 
-- [Identity & Access Management (IAM)]
-- [Cognito]
-- [Security Token Service (STS)]
-- [Security Token Service (STS)]
-- [Identity Federation in AWS]
-- [AWS Organizations]
+- [Identity & Access Management (IAM)](#iam)
+- [Cognito](#cognito)
+- [Security Token Service (STS)](#sts)
+- [Identity Federation in AWS](#identity-feration-in-aws)
+- [AWS Organizations](#aws-organisation)
 - [SSO]
 
 ### Cloud Security
-- [AWS Shield]
-- [Web Application Firewall (WAF)]
-- [Firewall Manager]
-- [GuardDuty]
-- [Inspector]
-- [Macie]
+- [AWS Shield](#aws-shield)
+- [Web Application Firewall (WAF)](#waf)
+- [Firewall Manager](#firewall-manager)
+- [GuardDuty](#guard-duty)
+- [Inspector](#inspector)
+- [Macie](#macie)
 
 ### Monitoring & Audit
-- [CloudWatch]
-- [CloudTrail]
-- [Config]
-- [X-Ray]
-- [Trusted Advisor]
-- [Cost exploer]
+- [CloudWatch](#cloudWatch)
+- [CloudTrail](#cloudTrail)
+- [Config](#config)
+- [X-Ray](#x-ray)
+- [Trusted Advisor](#trusted-advisor)
+- [Cost explorer](#cost-explorer)
