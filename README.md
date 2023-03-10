@@ -12,7 +12,6 @@
 ### High availability and scalability 
  - [ELB](#elb)
  - [ASB](#asb)
- - [High Performance Computing (HPC)](#hpc)
 
 ### Storage
 - [S3](#s3)
@@ -444,3 +443,100 @@ __S3 Select & Glacier Select__
 - Can filter by rows & columns (simple SQL statements)
 - Less network transfer cost
 - Less CPU cost client-side
+
+# EBS
+- An EBS (Elastic Block Store) Volume is a network drive you can attach to your instances while they run
+- Can only be mounted to 1 instance at a time (except EBS multi-attach)
+- It allows your instances to persist data, even after their termination
+- They are bound to a specific availability zone
+- An EBS Volume in us-east-1a cannot be attached to us-east-1b
+- To move a volume across, you first need to snapshot 
+- __EBS Multi-attach__ allows the same EBS volume to attach to multiple EC2 instances in the same AZ
+
+__EBS Snapshots__
+- Make a backup (snapshot) of your EBS volume at a point in time
+- Not necessary to detach volume to do snapshot, but recommended
+- Can copy snapshots across AZ or Region
+
+__EBS Snapshot Archive__
+ - Move a Snapshot to an ”archive tier” that is 75% cheaper
+ - Takes within 24 to 72 hours for restoring the archive
+ 
+__Recycle Bin for EBS Snapshots__
+- Setup rules to retain deleted snapshots so you can recover them after an accidental deletion
+- Specify retention (from 1 day to 1 year)
+
+__Fast Snapshot Restore (FSR)__
+ - Force full initialization of snapshot to have no latency on the first use ($$$)
+
+__Volume Types__
+__Only gp2/gp3 and io1/io2 can be used as boot volumes__
+
+__EBS SSD__
+
+- __gp2/gp3 (SSD)__ General purpose SSD volume that balances price and performance for a wide variety of workloads
+- __io1/io2 (SSD)__ Highest-performance SSD volume for mission-critical low-latency or high-throughput workloads\ Attach the same EBS volume to multiple EC2 instances in the same AZ
+
+__EBS HDD__
+
+- __st1 (HDD)__ Low cost HDD volume designed for frequently accessed, throughput- intensive workloads
+- __sc1 (HDD)__ Lowest cost HDD volume designed for less frequently accessed workloads
+
+__EBS Encryption__
+
+- For Encrypted EBS volumes:
+  - Data at rest is encrypted
+  - EBS Encryption leverages keys from KMS (AES-256)
+  - Data in-flight between the instance and the volume is encrypted
+  - All snapshots are encrypted
+  - All volumes created from the snapshot are encrypted
+- Encrypt an un-encrypted EBS volume 
+  - Create an EBS snapshot of the volume
+  - Copy the EBS snapshot and encrypt the new copy
+  - Create a new EBS volume from the encrypted snapshot (the volume will be automatically encrypted)  
+
+__EFS__
+- Managed NFS (network file system) that can be mounted on many EC2
+- EFS works with EC2 instances in multi-AZ
+- Highly available, scalable, expensive 
+- File system scales automatically, pay-per-use, no capacity planning
+- Compatible with Linux-based AMI (Windows not supported at this time)
+- Encryption at rest using KMS
+
+__EFS – Performance__
+-EFS can support thousands of concurrent connections (EC2 instances).
+- EFS can handle up to 10 Gbps in throughput.
+- Scale your storage to petabytes.
+
+__Controlling Performance__
+
+ When creating an EFS file system, you can set what performance characteristics you want
+  - __General Purpose__ (default): latency-sensitive use cases (web server, CMS, etc.) 
+  - __Max I/O__ : higher latency & throughput (big data, media processing)
+  
+__Storage Tiers__
+
+- EFS comes with storage tiers and lifecycle management, allowing you to move your data from one tier to another after X number of days.
+   - __Standard__ For frequently accessed files  
+   - __Infrequently Accessed__ For files not frequently accessed
+   
+
+# FSX
+__FSx for Windows__
+
+- A managed Windows Server that runs __Windows Server Message Block (SMB)__ -based file services.
+- __Designed for Windows__ and Windows applications.
+- __Supports__ AD users, access control lists, groups, and security policies, along with Distributed File System (DFS) namespaces and replication.
+
+__Amazon FSx for Lustre__
+
+- A fully managed file system that is optimized for compute-intensive workloads
+- High Performance Computing
+- Machine Learning
+- Media Data Processing Workflows
+
+
+__ How differ  EFS, FSx for Windows, or FSx for Lustre__
+- __EFS__: When you need distributed, highly resilient storage for Linux instances and Linux-based applications.
+- __Amazon FSx__ for Windows: When you need centralized storage for Windows-based applications, such as SharePoint\ Microsoft SQL Server, Workspaces, IIS Web Server, or any other native Microsoft application.
+- __Amazon FSx for Lustre__: When you need high-speed, high-capacity distributed storage. This will be for\ applications that do high performance computing (HPC), financial modeling, etc.\ Remember that FSx for Lustre can store data directly on S3
