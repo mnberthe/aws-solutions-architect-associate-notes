@@ -418,7 +418,8 @@ __S3 Glacier__
 __S3 Lifecycle Management__
 - Lifecycle management automates moving your objects between thedifferent storage tiers, thereby maximizing cost effectiveness.
 
-- __S3 performance__
+__S3 performance__
+
 __3,500 PUT/COPY/POST/DELETE and 5,500 GET/HEAD requests per second, per prefix__ General Perf
 
 - You can get better performance by spreading your reads across different prefixes, you can achieve 11,000 requests per second with 2 prefixes.
