@@ -475,9 +475,8 @@ __Volume Types__
 __Only gp2/gp3 and io1/io2 can be used as boot volumes__
 
 __EBS SSD__
-
-- __gp2/gp3 (SSD)__ General purpose SSD volume that balances price and performance for a wide variety of workloads
-- __io1/io2 (SSD)__ Highest-performance SSD volume for mission-critical low-latency or high-throughput workloads\
+- __gp2/gp3 (SSD)__ __General purpose SSD__ volume that balances price and performance for a wide variety of workloads
+- __io1/io2 (SSD)__ __Provisioned IOPS__ Highest-performance SSD volume for mission-critical low-latency or high-throughput workloads\
 Attach the same EBS volume to multiple EC2 instances in the same AZ
 
 __EBS HDD__
@@ -542,4 +541,8 @@ __Amazon FSx for Lustre__
 __How differ  EFS, FSx for Windows, or FSx for Lustre__
 - __EFS__: When you need distributed, highly resilient storage for Linux instances and Linux-based applications.
 - __Amazon FSx__ for Windows: When you need centralized storage for Windows-based applications, such as SharePoint\ Microsoft SQL Server, Workspaces, IIS Web Server, or any other native Microsoft application.
-- __Amazon FSx for Lustre__ When you need high-speed, high-capacity distributed storage. This will be for\ applications that do high performance computing (HPC), financial modeling, etc.\ Remember that FSx for Lustre can store data directly on S3
+- __Amazon FSx for Lustre__ When you need high-speed, high-capacity distributed storage.\
+  This will be for applications that do high performance computing (HPC), financial modeling, etc.\
+  Remember that FSx for Lustre can store data directly on S3
+  
+ # Aws Backup
