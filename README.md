@@ -25,7 +25,7 @@
 
 ### Database
 - [RDS](#rds)
-- [Aurora](#aurora)
+- [Amazon Aurora](#amazon-aurora)
 - [DynamoDB](#dynamoDB)
 - [DocumentDB](#documentDB)
 - [ElastiCache](#elasticache)
@@ -573,4 +573,106 @@ allowing you to expire  unnecessary backups after a period of time
  # Database
 
 ## RDS
+
+- RDS stands for Relational Database Service
+- It’s a managed DB service for DB use SQL as a query language
+- RDS is generally used for __online transaction processing (OLTP)__ workloads
+- Databases supported :
+  - Postgres
+  - MySql
+  - MariaDB
+  - Oracle
+  - Microsoft SQL Server
+  - Aurora  
+- Continuous backups and restore to specific timestamp __(Point in Time Restore)!__
+- You can’t SSH into your instances
  
+__RDS Auto Scaling__
+
+- When RDS detects you are running out of free database storage, it scales automatically. 
+- You have to set __Maximum Storage Threshold__ (maximum limit for DB storage)
+- Condition for automatic storage scaling:
+   - Free storage is less than 10% of allocated storage
+   - Low-storage lasts at least 5 minutes
+   - 6 hours have passed since last modification
+  
+__RDS Read Replicas for read scalability AKA Performance__
+
+- A read-only copy of your primary database in the same AZ, cross-AZ, or cross-region
+- Used to increase or scale read performance.
+- Up to 5 Read Replicas
+- Replicas can be promoted to their own DB
+- Applications must update the connection string to leverage read replicas
+
+__RDS Multi AZ for Disaster Recovery__
+
+- With __Multi-AZ__, RDS creates an exact copy of your production database in another __Availability Zone__
+- __Synchronous replication__
+- One DNS name, so __connection string does not require to be updated__(both the databases can be accessed by one DNS name\
+ which allows for automatic DNS failover to standby database)
+- When failing over, __RDS flips the CNAME record__ for the DB instance to point at the standby, which is in turn promoted to become the new primary.
+- Cannot be used for scaling as the standby database cannot take read/write operation
+
+# Amazon Aurora
+- Aurora is a proprietary technology from AWS (not open sourced)
+- Postgres and MySQL are both supported as Aurora DB
+- Aurora is “AWS cloud optimized” and claims __5x performance improvement over MySQL on RDS, over 3x the performance of Postgres on RDS__
+- Aurora storage automatically grows in increments of 10GB, up to 128 TB.
+- Up to 15 read replicas
+- __Supports only MySQL & PostgreSQL__
+- Failover in Aurora is instantaneous.
+- Backtrack: restore data at any point of time without using backups
+
+__Aurora High Availability__
+
+- 2 copies of your data are contained in each Availability Zone
+- with a minimum of 3 Availability Zones
+- 6 copies of your data
+- Aurora is designed to __transparently handle the loss of up to 2 copies of data__ without affecting
+- database write availability and up to 3 copies without affecting read availability
+- Aurora storage is also __self-healing__. 
+- Data blocks and disks are continuously scanned for errors and repaired automatically
+- Support for Cross Region Replication
+- __Automated failover__ A read replica is promoted as the new master in less than 30 seconds
+- In case no replica is available, Aurora will attempt to create a new DB Instance in the same AZ as the original instance
+- 
+__Aurora Read Scaling__
+
+- One Aurora Instance takes writes __(master)__
+- Master + up to 15 Aurora Read Replicas serve reads
+- Aurora DB Cluster :
+  - __Writer Endpoint__ :
+    - Always points to the master (can be used for read/write)
+    - Each Aurora DB cluster has one writer cluster endpoint
+  - __Reader Endpoint__
+    - Provides load-balancing for read replicas only (used to read only)
+    - If the cluster has no read replica, it points to master (can be used to read/write) 
+    - Each Aurora DB cluster has one reader endpoint
+
+__Aurora Serverless__
+
+- Optional
+- Automated database instantiation and auto scaling based on actual usage
+- Good for infrequent,intermittent or unpredictable workloads
+- No capacity planning needed
+- Pay per second, can be more cost effective
+
+__Aurora Multi-Master__
+
+- Optional
+- In case you want immediate failover for write node (High availability)
+- Every node does R/W - vs promoting a Read Replica as the new master
+
+__Aurora Global Database__
+
+- __Aurora Cross Region Read Replicas:__
+  - Useful for disaster recovery
+ - Designed for __globally distributed applications__ with __low latency local reads__ in each region
+ - 1 Primary Region (read / write)
+ - Up to 5 secondary (read-only) regions (replication lag < 1 second)
+ - Up to 16 Read Replicas per secondary region
+ - Helps for decreasing latency for clients in other geographical locations
+ - __RTO of less than 1 minute__ (to promote another region as primary)
+
+
+
