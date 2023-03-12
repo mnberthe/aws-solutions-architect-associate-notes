@@ -26,13 +26,13 @@
 ### Database
 - [RDS](#rds)
 - [Amazon Aurora](#amazon-aurora)
-- [DynamoDB](#dynamoDB)
-- [DocumentDB](#documentDB)
+- [DynamoDB](#dynamodb)
+- [DocumentDB](#documentdb)
 - [ElastiCache](#elasticache)
-- [Amazon Neptune](#netptune)
+- [Amazon Neptune](#amazon-neptune)
 - [Redshift](#redshift)
-- [QLDB](#qldb)
-- [timestream](#timestream)
+- [Amazon QLDB](#amazon-qldb)
+- [Amazon Timestream](#amazon-timestream)
 
 ### Data & Analytics
 - [Athena](#athena)
@@ -674,5 +674,86 @@ __Aurora Global Database__
  - Helps for decreasing latency for clients in other geographical locations
  - __RTO of less than 1 minute__ (to promote another region as primary)
 
+# DynamoDB
 
+- Fully managed, highly available with replication across multiple AZs
+- NoSQL database - not a relational database - __with transaction support__
+- Scales to massive workloads, distributed database
+- __Single digit millisecond__ response time at any scale
+- Maximum size of an item is 400KB
+- __Supports TTL__ (automatically delete an item after an expiry timestamp)
+- Supports __Transactions__ (either write to multiple tables or write to none)- __DynamoDB transactions.__
+- DynamoDB transactions provide developers atomicity, consistency, isolation, and durability\
+(__ACID__ across 1 or more tables within a single AWS account and region.
+- All-or-nothing transactions.
 
+__Capacity__
+
+- __Provisioned Mode (default)__
+  - You specify the number of reads/writes per second
+  - You need to plan capacity beforehand
+  - Pay for provisioned Read Capacity Units (RCU) & Write Capacity Units (WCU)
+  - Auto-scaling option (eg. set RCU and WCU to 80% and the capacities will be scaled automatically based on the workload)
+- __On-demand Mode__
+  - Read/writes automatically scale up/down based on workloads 
+  - No capacity planning needed
+  - Pay for what you use, more expensive ($$$)
+  - Great for unpredictable workloads, steep sudden spikes
+
+ __DynamoDB Accelerator (DAX)__
+
+- Fully managed, highly available, in-memory cache
+- 10x performance improvement
+- Reduces request time from milliseconds to __microseconds__ even under load
+- Help solve read congestion by caching
+- 5 minutes TTL for cache (default)
+- Doesn’t require application code changes
+
+__DynamoDB Streams__
+
+- Ordered stream of notifications of item-level modifications (create/update/delete) in a table
+- Destination can be:
+  - Kinesis Data Streams
+  - AWS Lambda
+  - Kinesis Client Library applications
+- Data Retention for up to 24 hours   
+- Allow Implement cross-region replication
+- React to changes in real-time (welcome email to users)
+
+__DynamoDB Global Tables__
+
+- Globally distributed applications
+- Based on DynamoDB streams
+- Multi-region redundancy for disaster recovery or high availability
+- Replication latency under 1 second
+- __Must enable DynamoDB Streams as a pre-requisite__
+
+# DocumentDB
+- Aurora is an “AWS-implementation” of PostgreSQL / MySQL …
+- __DocumentDB is the same for MongoDB (which is a NoSQL database)__
+- Fully Managed, highly available with replication across 3 AZ
+- DocumentDB storage automatically grows in increments of 10GB, up to 64 TB.
+- Automatically scales to workloads with millions of requests per seconds
+
+# Amazon Neptune
+- Fully managed __graph database__
+- A popular graph dataset would be a __social network__
+- Highly available across 3 AZ, with up to 15 read replicas
+- Highly available with replications across multiple AZs
+
+# Amazon QLDB
+
+- QLDB stands for ”Quantum Ledger Database”
+- A ledger is a book __recording financial transactions__
+- Fully Managed, Serverless, High available, Replication across 3 AZ
+- Used to review history of all the changes made to your application data over time
+- __Immutable system: no entry can be removed or modified, cryptographically verifiable__
+- You cannot update a record (i.e.,replace old content) in a ledger database. Instead, an update adds a new record to the databas
+- __Use case__ : __financial transactions__, supply chain, cryptocurrencies, such as Bitcoin, blockchain
+
+# Amazon Timestream
+
+- Fully managed, fast, scalable, serverless __time series database__
+- Automatically scales up/down to adjust capacity
+- Encryption in transit and at rest
+- __Use cases__: IoT apps, operational applications, real time analytics, …
