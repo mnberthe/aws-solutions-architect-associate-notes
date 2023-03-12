@@ -82,7 +82,8 @@
 - [Route 53](#route53)
 - [API Gateway](#api-gateway)
 - [VPC](#vpc)
-- [VPN](#vpn)
+- [PrivateLink](#privatelink)
+- [Site-to-Site VPN](#site-to-site-vpn)
 - [Direct connect](#direct-connect)
 - [Transit Gateway](#transit-gateway)
 
@@ -763,3 +764,206 @@ __DynamoDB Global Tables__
 - Automatically scales up/down to adjust capacity
 - Encryption in transit and at rest
 - __Use cases__: IoT apps, operational applications, real time analytics, …
+
+# Networking
+
+## VPC
+
+- VPC = Virtual Private Cloud
+- You can have multiple VPCs in an AWS region (__max. 5 per region – soft limit__)
+- Because VPC is private, only the Private IPv4 ranges are allowed:
+  - 10.0.0.0 – 10.255.255.255 (10.0.0.0/8) 
+  - 172.16.0.0 – 172.31.255.255 (172.16.0.0/12)
+  - 192.168.0.0 – 192.168.255.255 (192.168.0.0/16)
+  
+__VPC – Subnet__
+-  AWS reserves __5 IP addresses (first 4 & last 1)__ in each subnet
+
+__Internet Gateway (IGW)__
+- Allows resources (e.g., EC2 instances) in a VPC connect to the Internet
+- It scales horizontally and is highly available and redundant
+- One VPC can only be attached to one IGW and vice versa
+- Internet Gateways on their own do not allow Internet access
+- Route tables must also be edited!
+
+__NAT Instance__
+
+- __NAT for Network Address Translation__
+- Allows EC2 instances in private subnets to connect to the Internet
+- Must be launched in a public subnet
+- Must disable EC2 setting: __Source /destination Check__ because NAT instance forward traffic that does not belong to him
+- Must have Elastic IP attached to it
+- Route Tables must be configured to route traffic from private subnets to the NAT Instance
+- Can be used as a Bastion Host
+- Disadvantages:
+  - Not highly available or resilient out of the box. Need to create an ASG in multi-AZ + resilient user-data script
+  - Internet traffic bandwidth depends on EC2 instance type 
+
+![Capture d’écran 2023-03-12 à 21 21 53](https://user-images.githubusercontent.com/35028407/224571333-fedbdbe0-6fc4-483d-a3ce-586caa62c7b5.png)
+
+
+__NAT Gateway__
+
+- AWS-managed NAT, higher bandwidth, high availability, no administration
+- Pay per hour for usage and bandwidth
+- Preferred over NAT instances
+- NATGW is created in a specific Availability Zone, __uses an Elastic IP__
+- __Can’t be used by EC2 instance in the same subnet (only from other subnets)__
+- Requires an IGW (Private Subnet => NATGW => IGW)
+- __Created in a public subnet__
+- 5 Gbps of bandwidth with automatic scaling up to 45 Gbps
+- No Security Groups to manage / required
+- Route Tables for private subnets must be configured to route internet-destined traffic to the NAT gateway
+
+![image](https://user-images.githubusercontent.com/35028407/224571995-c755c35d-87e3-49da-b223-021da7d53d53.png)
+
+_ __Architecture__
+
+![image](https://user-images.githubusercontent.com/35028407/224572054-495518a9-d85e-404a-9b66-2ade283a5c77.png)
+
+__NAT Gateway with High Availability__
+
+__NAT Gateway is resilient within a single Availability Zone__
+- Must create __multiple NAT Gateways__ in __multiple AZs__ for fault-tolerance
+- No cross-AZ failover needed because if an AZ goes down, all of the instances in that AZ also go down.
+
+![image](https://user-images.githubusercontent.com/35028407/224572232-0dc02ac3-1e4d-4bad-86e6-3c138c2d2393.png)
+
+
+__Network Access Control List (NACL)__
+
+- NACL are like a firewall which control traffic from and to __subnets__
+- One NACL per subnet but a NACL can be attached to multiple subnets
+- __New subnets are assigned the Default NACL__
+- __Default NACL allows all inbound & outbound requests__
+- New NACL rule By default deny all inbound and outbound traffic until you add rules
+- __NACL Rules__:
+  - Based only on IP addresses
+  - Rules number: 1-32766 (lower number has higher precedence)
+  - First rule match will drive the decision
+
+__NACL vs Security Group__
+_ NACL:
+  - Firewall for subnets
+  - Supports both Allow and Deny rules
+  - __Stateless__ (both request and response will be evaluated against the NACL rules)
+  
+- Security Group:
+  - Firewall for EC2 instances
+  - Supports only Allow rules
+  - __Stateful__ return traffic is automatically allowed,regardless of any rules
+
+__VPC Peering__
+- Privately connect two VPCs using AWS network
+- Must not have overlapping CIDRs
+- VPC Peering connection is NOT transitive
+- Must update route tables in each VPC’s subnets to ensure requests destined to the peered VPC can be routed through the __peering connection__
+
+![image](https://user-images.githubusercontent.com/35028407/224573874-c62c0540-a409-4208-8b00-e740a65fbd98.png)
+
+![image](https://user-images.githubusercontent.com/35028407/224573884-adf59c75-6bb8-48bd-a973-073738009655.png)
+
+- You can create VPC Peering connection between VPCs in different AWS accounts/regions
+
+![image](https://user-images.githubusercontent.com/35028407/224573970-04a0a16b-3774-42d3-90b5-a96f503b8e31.png)
+
+
+__VPC Endpoints__
+
+![image](https://user-images.githubusercontent.com/35028407/224574183-409f676e-b68c-4024-8539-5d94595ae278.png)
+
+- Every AWS service is publicly exposed (public URL)
+- VPC Endpoints (powered by __AWS PrivateLink__) allows you to connect to __AWS services__ using a __private network__ instead of using the public Internet
+- They’re redundant and scale horizontally
+- They remove the need of IGW, NATGW, … to access AWS Services
+- Types of Endpoints :
+  - __Interface Endpoints (powered by PrivateLink)__
+    - Provisions an __ENI__ (private IP address) as an entry point
+    - Need to __attach a security group to the interface endpoint__ to control access
+    - Supports most AWS services
+    - No need to update the route table
+  - __Gateway Endpoint__
+    - Provisions a gateway
+    - Must be used as a target in a route table 
+    - Supports only __S3__ and __DynamoDB__
+
+
+# PrivateLink
+To open our applications up to other VPCs, we can either:
+- Open the VPC up to the Internet
+  - Security considerations; everything in the public subnet is public
+  - A lot more to manage 
+- Use VPC Peering
+  - You will have to create and manage many different peering relationships
+
+- __PrivateLink__ The best way to expose a service VPC __to tens, hundreds, or thousands of customer VPCs__
+- Doesn’t require VPC peering; no route tables, NAT gateways, internet gateways, etc
+- Requires a __Network Load Balancer__ on the service VPC and an __ENI__ on the customer VPC
+
+![image](https://user-images.githubusercontent.com/35028407/224575961-2394ab07-61d8-4967-9c2d-7a151b71db09.png)
+
+
+# Site-to-Site VPN
+
+- Easiest and most cost-effective way to connect a VPC to an on-premise data center
+- __IPSec Encrypted__ connection through the public internet
+- __Virtual Private Gateway (VGW)__: VPN concentrator on the VPC side of the VPN connection
+- __Customer Gateway (CGW)__: Software application or physical device on customer side of the VPN connection
+- __Enable Route Propagation__ for the Virtual Private Gateway in the route table that is associated with your subnets
+- If you need to ping EC2 instances from on-premises, make sure you add the __ICMP protocol__ on the inbound rules of your security groups
+
+![image](https://user-images.githubusercontent.com/35028407/224577737-2f0cdd52-7952-4c9f-aceb-07873b70d668.png)
+
+__AWS VPN CloudHub__
+- __Low-cost hub-and-spoke model for network connectivity between a VPC and multiple on-premise data centers__
+- Every participating network can communicate with one another through the VPN connection
+- It operates over the public internet, but all traffic between the customer gateway and the AWS VPN CloudHub is encrypted.
+
+![image](https://user-images.githubusercontent.com/35028407/224577899-f80ab184-fc0f-4c72-9afe-da6e4ad724ac.png)
+
+# Direct connect
+
+- Dedicated __private connection__ from an on-premise data center to a VPC
+- Dedicated connection must be setup between your __Data Center__ and AWS __Direct Connect locations__
+- You need to setup a __Virtual Private Gateway__ on your VPC
+- __Data in transit is not-encrypted__ but the connection is private (secure)
+- More stable and secure than Site-to-Site VPN
+- Access public & private resources on the same connection using Public & __Private Virtual Interface (VIF)__ respectively
+- DIRECT CONNECT IS:
+   - Fast
+   - Secure
+   - Reliable
+   - Able to take massive throughput
+   - Lower cost
+
+- __Connection Types__
+  - __Dedicated Connection__
+    - A physical Ethernet connection associated with a single customer.  
+    - 1Gbps,10 Gbps and 100 Gbps capacity
+  - __Hosted Connection__
+    - A physical Ethernet connection that an AWS Direct Connect Partner provisions on behalf of acustomer
+    - 50Mbps, 500 Mbps, to 10 Gbps
+
+![image](https://user-images.githubusercontent.com/35028407/224578908-3c1ca9ca-9760-42bb-a995-2cf8f49809e8.png)
+
+- __Direct Connect Gateway__
+
+  - Used to setup a Direct Connect to multiple VPCs from your data center, possibly in different regions but same account
+
+![image](https://user-images.githubusercontent.com/35028407/224579112-faf44a8e-5246-4f13-83bc-482425b5b3ba.png)
+
+
+# Transit Gateway
+
+- __Transitive peering__ between thousands of VPCs and on-premise data centers using __hub-and-spoke (star) topology__
+- Works with __Direct Connect Gateway__, __VPN Connection
+- Regional resource, can work cross-region 
+- You can peer Transit Gateways across regions
+- Route Tables to control communication within the transitive network
+- Supports __IP Multicast__ (not supported by any other AWS service)
+
+![image](https://user-images.githubusercontent.com/35028407/224579481-a1e10b06-f6d8-4a64-8e30-66c78229f5d1.png)
+
+
+
+
