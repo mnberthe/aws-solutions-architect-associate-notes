@@ -19,7 +19,6 @@
 - [EFS](#efs)
 - [FSx](#fsx)
 - [Storage Gateway](#storagegateway)
-- [Aws Backup](#awsbackup)
 - [Snowball Edge](#snowballedge)
 - [Snowmobile](#snowmobile)
 - [Aws Transfer Family](#awstransferfamily)
@@ -124,8 +123,9 @@
 - [Trusted Advisor](#trusted-advisor)
 - [Cost explorer](#cost-explorer)
 
+# Compute services
 
-# EC2 
+## EC2 
 EC2 (Elastic Compute Cloud) is an  __Infrastructure as a Service (IaaS)__\
 Storage space:
  - Network attached __(EBS & EFS)__
@@ -288,7 +288,9 @@ __Hibernation__
 - The root EBS volume must be encrypted
 - __Instance RAM Size – must be less than 150 GB.__
 
-# S3
+# Storage
+
+## S3
 - Remember that S3 is Object-based: i.e allows you to upload files.
 - Files can be 0 Bytes to 5 TB.
 - There is unlimited storage
@@ -544,5 +546,31 @@ __How differ  EFS, FSx for Windows, or FSx for Lustre__
 - __Amazon FSx for Lustre__ When you need high-speed, high-capacity distributed storage.\
   This will be for applications that do high performance computing (HPC), financial modeling, etc.\
   Remember that FSx for Lustre can store data directly on S3
-  
- # Aws Backup
+ 
+# Disaster Recovery 
+ ## Aws Backup
+ 
+Backup allows you to consolidate your backups across multiple AWS services, such as :
+ - EC2
+ - EBS
+ - EFS 
+ - S3
+ - Amazon FSx for Lustre
+ - Amazon FSx for Windows File Server  
+ - AWS Storage Gateway
+ - RDS
+ - DynamoDB
+
+__It gives you centralized control across all AWS services, in multiple AWS accounts across the entire AWS organization.__
+
+__Aws backup benefit__
+- __Central Management__
+- __Automation__ : create automated backup schedules and retention policies,create lifecycle policies\
+allowing you to expire  unnecessary backups after a period of time
+- __Improved Compliance__: Backup policies can be enforced while backups can be encrypted both at rest and in transit\
+ allowing alignment to regulatory compliance
+ 
+ # Database
+
+## RDS
+ 
