@@ -30,7 +30,6 @@
 - [DocumentDB](#documentdb)
 - [ElastiCache](#elasticache)
 - [Amazon Neptune](#amazon-neptune)
-- [Redshift](#redshift)
 - [Amazon QLDB](#amazon-qldb)
 - [Amazon Timestream](#amazon-timestream)
 
@@ -673,6 +672,13 @@ __Aurora Global Database__
  - Up to 16 Read Replicas per secondary region
  - Helps for decreasing latency for clients in other geographical locations
  - __RTO of less than 1 minute__ (to promote another region as primary)
+
+# ElastiCache
+
+- The same way RDS is to get managed Relational Databases…
+- ElastiCache is to get managed Redis or Memcached
+- Caches are in-memory databases with really high performance, low latency
+- Helps make your application stateless, because it doesn’t have to cache locally
 
 # DynamoDB
 
