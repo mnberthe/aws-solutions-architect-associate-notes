@@ -1069,3 +1069,20 @@ __Multi-value__
 - Route traffic to multiple resources (max 8)
 - Health Checks (only healthy resources will be returned)
   
+__Health Checks__
+- HTTP Health Checks are only for public resources
+- Allows for Automated DNS Failove
+- Three types:
+  - Monitor an endpoint (application or other AWS resource)
+    - Multiple global health checkers check the endpoint health
+    - Must configure the application firewall to allow incoming requests from the IPs of Route 53 Health Checkers
+    - Supported protocols: HTTP, HTTPS and TCP
+   - Monitor other health checks (__Calculated Health Checks__)
+     - Combine the results of multiple Health Checks into one (AND, OR, NOT)
+     - Specify how many of the health checks need to pass to make the parent pass
+     - Usage: perform maintenance to your website without causing all health checks to fail
+    - Monitor CloudWatch Alarms (to perform health check on private resources)
+      - Route 53 health checkers are outside the VPC. They can’t access private endpoints (private VPC or on-premises resources).
+      - Create a CloudWatch Metric and associate a CloudWatch Alarm to it, then create a Health Check that checks the Cloud watch alarm.  
+
+  
