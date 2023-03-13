@@ -79,7 +79,7 @@
 - [Textract](#emr)
 
 ### Networking
-- [Route 53](#route53)
+- [Route 53](#route-53)
 - [API Gateway](#api-gateway)
 - [VPC](#vpc)
 - [PrivateLink](#privatelink)
@@ -965,5 +965,107 @@ __AWS VPN CloudHub__
 ![image](https://user-images.githubusercontent.com/35028407/224579481-a1e10b06-f6d8-4a64-8e30-66c78229f5d1.png)
 
 
+# Route 53
 
+- A highly available, scalable, fully managed and Authoritative DNS(cusutmer can update DNS records)
+- Route 53 is also a Domain Registrar
+- Ability to check the health of your resources
+- The only AWS service which provides 100% availability SLA
 
+__Hosted Zone__
+
+- A container for records that define how to route traffic to a domain and
+its subdomains
+- Hosted zone is queried to get the IP address from the hostname
+
+  __Two types__
+    - __Public Hosted Zone__
+     - resolves public domain names
+     - can be queried by anyone on the internet
+    - __Private Hosted Zone__
+     - resolves private domain names
+     - can only be queried from within the VPC
+
+__Record Types__
+
+Each record contains:
+  - __Domain/subdomain Name__ – e.g., example.com
+  - __Record Type__ – e.g., A or AAAA
+  - __Value__ – e.g., 12.34.56.78
+  - __Routing Policy__ – how Route 53 responds to queries
+  - __TTL__ – amount of time the record cached at DNS Resolvers
+
+- __A__ – maps a hostname to IPv4
+- __AAAA__ – maps a hostname to IPv6
+- __CNAME__ – maps a hostname to another hostname
+  - The target is a domain name which must have an A or AAAA record
+  - __Cannot point to root domains (Zone Apex)__ Ex: you can’t create a CNAME record for __example.com__, but you can create for __something.example.com__
+ 
+- __NS (Name Servers)__ - controls how traffic is routed for a domain
+- __Alias__ - maps a hostname to an AWS resource(app.mydomain.com => blabla.amazonaws.com)
+  - Native health check 
+  - AWS proprietary
+  - Can point to root (zone apex) and non-root domains
+  - __Alias Record is of type A or AAAA (IPv4 / IPv6)__
+  - Automatically recognizes changes in the resource’s IP addresses
+  - __You can’t set the TTL__
+  - Targets can be:
+    - Elastic Load Balancers
+    - CloudFront Distributions
+    - API Gateway
+    - Elastic Beanstalk environments
+    - S3 Websites
+    - VPC Interface Endpoints
+    - Global Accelerator accelerator
+  - __Target cannot be an EC2 DNS name__
+  
+  
+  __Routing Policies__
+  
+  __Simple__
+   - Route to one or more resources
+   - If multiple values are returned, client chooses one at random 
+   - No health check (if returning multiple resources, some of them might be unhealthy)
+   - If multiple values are returned, client chooses one at random 
+
+   ![image](https://user-images.githubusercontent.com/35028407/224734496-073f89af-49e1-4c2e-9213-eef3ef3411f9.png)
+   ![image](https://user-images.githubusercontent.com/35028407/224734556-e325660a-ab50-46a4-80d8-9a53ffd8e110.png)
+
+__Weighted__
+
+- Control the % of the requests that go to each specific resource
+- Can be associated with Health Checks
+- __Use cases__: load balancing between regions, testing, new application versions…
+
+__Failover(Active-Passive)__
+- Primary & Secondary Records (if the primary application is down, route to secondary application)
+- __Health check__ must be associated with the primary record
+- Used for __Active-Passive__ failover strategy
+
+__Latency-based__
+
+- Redirect to the resource that has the lowest network latency
+- Latency is based on traffic between users and AWS Regions
+- Can be associated with Health Checks (has a failover capability)
+
+__Geolocation__
+
+- Routing based on the client's location
+- Should create a “Default” record (in case there’s no match on location)
+- __Use cases__: restrict content distribution & language preference
+- Can be associated with Health Checks
+
+__Geoproximity__
+
+- Route traffic to your resources based on the geographic location of users and
+resources 
+- Ability to __shift more or less traffic to resources__ based on the defined __bias__
+- To change the size of the geographic region, specify bias values:
+  - To expand (1 to 99) – more traffic to the resource
+  - To shrink (-1 to -99) – less traffic to the resource
+- To use geoproximity routing you must use Route 53 __Traffic Flow__
+
+__Multi-value__
+- Route traffic to multiple resources (max 8)
+- Health Checks (only healthy resources will be returned)
+  
