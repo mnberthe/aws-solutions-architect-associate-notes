@@ -413,7 +413,7 @@ There are 4 types of scaling we can use to adjust our relational database perfor
 
 __No Relational Database scaling__
 
-- __DynamoDB__ scaling is simplified when using dynomoDB
+- __DynamoDB__ DynamoDB scaling is used to scale dynamoDB
 
 # Storage
 
