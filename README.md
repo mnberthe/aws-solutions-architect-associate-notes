@@ -394,6 +394,25 @@ The goal of an Auto Scaling Group (ASG) is to:
  - __Predictive Scaling__
     - Historical data is used to predict the load pattern using ML and scale automatically
 
+__Warm-Up__
+Stops instances from being placed behind the load balancer, failing the health check, and being terminated
+
+__Cooldown__ Pauses Auto Scaling for a set amount of time. Helps to avoid runaway scaling events.
+
+__Relational Database scaling (RDS)__
+
+There are 4 types of scaling we can use to adjust our relational database performance:
+- __Aurora Serverless__
+  - We can offload scaling to AWS. Excels with unpredictable workloads.
+- __Read Replicas__
+  - Creating read-only copies of our data can help spread out the workload 
+- __Scaling Storage__
+  - Storage can be resized(disk size), but it’s only able to go up, not down(except for Aurora). 
+- __Vertical Scaling__
+  - Resizing the database from one size(ex EC2 t2micro) to another(ex EC2 t3 large) can create greater performance. 
+
+__No Relational Database scaling __
+- __DynamoDB__ scaling is simplified when using dynomoDB
 
 # Storage
 
