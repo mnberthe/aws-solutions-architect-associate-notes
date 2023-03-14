@@ -10,8 +10,8 @@
 - [Fargate](#fargate)
 
 ### High availability and scalability 
- - [ELB](#elb)
- - [ASB](#asb)
+ - [Eastic Load Balancer](#elastic-load-balancer)
+ - [Auto Scaling Group](#auto-scaling-group)
 
 ### Storage
 - [S3](#s3)
@@ -116,8 +116,8 @@
 - [Macie](#macie)
 
 ### Monitoring & Audit
-- [CloudWatch](#cloudWatch)
-- [CloudTrail](#cloudTrail)
+- [CloudWatch](#cloudwatch)
+- [CloudTrail](#cloudtrail)
 - [Config](#config)
 - [X-Ray](#x-ray)
 - [Trusted Advisor](#trusted-advisor)
@@ -287,6 +287,114 @@ __Hibernation__
 - Under the hood: the RAM state is written to a file in the root EBS volume
 - The root EBS volume must be encrypted
 - __Instance RAM Size – must be less than 150 GB.__
+
+
+# High availability and scalability 
+
+## Elastic Load Balancer
+
+- Spread load across multiple EC2 instances
+- Supports Multi AZ
+- Expose a single point of access (DNS) to your application
+- Do regular health checks to your instances
+- Enforce stickiness with cookies
+- High availability across zones
+- Separate public traffic from private traffic
+
+__Types__
+- __Classic Load Balancer (CLB) - deprecated__
+  - __Load Balancing to a single application__
+  - Supports HTTP, HTTPS (layer 7) & TCP (layer 4)
+  - Health checks are HTTP or TCP based
+  - Provides a fixed hostname (xxx.region.elb.amazonaws.com)
+
+- __Application Load Balancer (ALB)__
+  - Load balancing to multiple applications (target groups) based on the request parameters
+  - Operates at Layer 7 (HTTP, HTTPS and WebSocket)
+  - Provides a fixed hostname (xxx.region.elb.amazonaws.com)
+  - __Security Groups can be attached to ALBs__ to filters requests 
+  - Great for micro services & container-based applications (Docker & ECS)
+  - Client info is passed in the request headers
+    - Client IP => X-Forwarded-For
+    - Client Port => X-Forwarded-Port
+    - Protocol => X-Forwarded-Proto
+  - __Target Groups__
+    - Health checks are done at the target group level
+    - Target Groups could be
+      - EC2 instances - HTTP
+      - ECS tasks - HTTP
+      - Lambda functions - HTTP request is translated into a JSON event
+      - Private IP Addresses
+  - __Listener Rules__ can be configured to route traffic to different target groups based on
+    - Path (example.com/users & example.com/posts)
+    - Hostname (one.example.com & other.example.com)
+    - Query String (example.com/users?id=123&order=false)
+    - Request Headers
+    - Source IP address
+
+- __Network Load Balancer (NLB)__
+  - Operates at Layer 4 (TCP, UDP)
+  - Can handle millions of request per seconds (extreme performance)
+  - Lower latency ~ 100 ms (vs 400 ms for ALB
+  - __1 static public IP per AZ (vs a static hostname for CLB & ALB)__
+  - Health Checks support the TCP, HTTP and HTTPS Protocols
+  - __No security groups can be attached to NLBs__. Since they operate on layer 4, they cannot see the data available at layer 7. They just forward the   incoming traffic to the right target group as if those requests were directly coming from client. So, the attached instances must __allow TCP traffic     on port 80 from anywhere__.
+  - Within a target group, NLB can send traffic to
+    - EC2 instances
+    - IP addresses
+    - Application Load Balancer (ALB)
+
+- __Gateway Load Balancer (GWLB)__
+  - Operates at layer 3 (Network layer) - IP Protocol
+  - Used to route requests to a fleet of 3rd party virtual appliances like Firewalls, Intrusion Detection and Prevention Systems (IDPS), etc.
+
+- __Sticky Sessions (Session Affinity)__
+  - Requests coming from a client is always redirected to the same instance based on a cookie After the cookie expires, the requests coming from the same user might be redirected to another instance
+  - __Only supported by CLB & ALB__ because the cookie can be seen at layer 7 
+  - Used to ensure the user doesn’t lose his session data, like login or cart info, while navigating between web pages.
+  - Stickiness may cause load imbalance
+  - Cookies could be:
+    - Application-based (TTL defined by the application)
+    - Load Balancer generated (TTL defined by the load balancer)
+  - ELB reserved cookie names (should not be used):
+    - AWSALB
+    - AWSALBAPP
+    - AWSALBTG
+
+- __Cross-zone Load Balancing__
+- Allows ELBs in different AZ containing unbalanced number of instances to distribute the traffic evenly across all instances in all the AZ registered under a load balancer.
+- Supported Load Balancers
+  - Classic Load Balancer : Disabled by default
+  - Application Load Balancer : Always on (can’t be disabled)
+  - Network Load Balancer : Disabled by default
+  
+## Auto Scaling Group
+
+The goal of an Auto Scaling Group (ASG) is to:
+ - Scale out (add EC2 instances) to match an increased load
+ - Scale in (remove EC2 instances) to match a decreased load
+ - Ensure we have a minimum and a maximum number of EC2 instances running
+ - Automatically register new instances to a load balancer
+ - Re-create an EC2 instance in case a previous one is terminated (ex: if unhealthy)
+ - ASG can terminate instances marked as unhealthy by an ELB 
+ 
+ __Scaling Policies__
+ 
+ - __Scheduled Scaling__
+    - Scale based on a schedule
+    - Used when the load pattern is predictable
+
+ - __Simple Scaling/Step Scaling__
+    - Scale to certain size on a CloudWatch alarm (ex average CPU utilization in all ASG instances)
+    - Ex. when CPU > 90%, then scale to 10 instances
+  
+ - __Target Tracking Scaling__
+    - ASG maintains a CloudWatch metric and scale accordingly (automatically creates CW alarms)
+    - Ex. maintain CPU usage at 40%
+   
+ __Predictive Scaling__
+    - Historical data is used to predict the load pattern using ML and scale automatically
+
 
 # Storage
 
@@ -1085,82 +1193,123 @@ __Health Checks__
       - Route 53 health checkers are outside the VPC. They can’t access private endpoints (private VPC or on-premises resources).
       - Create a CloudWatch Metric and associate a CloudWatch Alarm to it, then create a Health Check that checks the Cloud watch alarm.  
 
-# Elastic Load Balancer
+# Monitoring & Audit
 
-- Spread load across multiple EC2 instances
-- Supports Multi AZ
-- Expose a single point of access (DNS) to your application
-- Do regular health checks to your instances
-- Enforce stickiness with cookies
-- High availability across zones
-- Separate public traffic from private traffic
+## CloudWatch
 
-__Types__
-- __Classic Load Balancer (CLB) - deprecated__
-  - __Load Balancing to a single application__
-  - Supports HTTP, HTTPS (layer 7) & TCP (layer 4)
-  - Health checks are HTTP or TCP based
-  - Provides a fixed hostname (xxx.region.elb.amazonaws.com)
+Serverless performance monitoring service
 
-- __Application Load Balancer (ALB)__
-  - Load balancing to multiple applications (target groups) based on the request parameters
-  - Operates at Layer 7 (HTTP, HTTPS and WebSocket)
-  - Provides a fixed hostname (xxx.region.elb.amazonaws.com)
-  - __Security Groups can be attached to ALBs__ to filters requests 
-  - Great for micro services & container-based applications (Docker & ECS)
-  - Client info is passed in the request headers
-    - Client IP => X-Forwarded-For
-    - Client Port => X-Forwarded-Port
-    - Protocol => X-Forwarded-Proto
-  - __Target Groups__
-    - Health checks are done at the target group level
-    - Target Groups could be
-      - EC2 instances - HTTP
-      - ECS tasks - HTTP
-      - Lambda functions - HTTP request is translated into a JSON event
-      - Private IP Addresses
-  - __Listener Rules__ can be configured to route traffic to different target groups based on
-    - Path (example.com/users & example.com/posts)
-    - Hostname (one.example.com & other.example.com)
-    - Query String (example.com/users?id=123&order=false)
-    - Request Headers
-    - Source IP address
+### Metrics
 
-- __Network Load Balancer (NLB)__
-  - Operates at Layer 4 (TCP, UDP)
-  - Can handle millions of request per seconds (extreme performance)
-  - Lower latency ~ 100 ms (vs 400 ms for ALB
-  - __1 static public IP per AZ (vs a static hostname for CLB & ALB)__
-  - Health Checks support the TCP, HTTP and HTTPS Protocols
-  - __No security groups can be attached to NLBs__. Since they operate on layer 4, they cannot see the data available at layer 7. They just forward the   incoming traffic to the right target group as if those requests were directly coming from client. So, the attached instances must __allow TCP traffic     on port 80 from anywhere__.
-  - Within a target group, NLB can send traffic to
-    - EC2 instances
-    - IP addresses
-    - Application Load Balancer (ALB)
+- CloudWatch provides metrics for every services in AWS
+- __Metric__ is a variable to monitor (CPUUtilization, NetworkIn…)
+- Metrics belong to __namespaces__
+- __Dimension__ is an attribute of a metric (instance id, environment, etc…)
+- Up to 10 dimensions per metric
+- __2 Type__
+  - Default metric
+    - These metrics are provided out of the box and do not require any additional work on your part to configure   
+  - Custom 
+    - These metrics will need to be provided by using the CloudWatch agent installed on the host. 
 
-- __Gateway Load Balancer (GWLB)__
-  - Operates at layer 3 (Network layer) - IP Protocol
-  - Used to route requests to a fleet of 3rd party virtual appliances like Firewalls, Intrusion Detection and Prevention Systems (IDPS), etc.
+ __EC2 Monitoring__
+ - Must run a __CloudWatch agent__ on instance to push system metrics and logs to CloudWatch.Instance role (IAM) must allow the instance to push logs to CloudWatch
+ - EC2 instances have metrics every 5 minutes
+ - With detailed monitoring (for a cost), you get metrics every 1 minute
+ - Use detailed monitoring if you want to react faster to changes (eg. scale faster for your ASG)
+ - __Available metrics in CloudWatch__:
+    - CPU Utilization
+    - Network Utilization
+    - Disk Performance
+    - Disk Reads/Writes
+ - __Custom metrics__
+    - Memory utilization (memory usage)
+    - Disk swap utilization
+    - Disk space utilization    
 
-- __Sticky Sessions (Session Affinity)__
-  - Requests coming from a client is always redirected to the same instance based on a cookie After the cookie expires, the requests coming from the same user might be redirected to another instance
-  - __Only supported by CLB & ALB__ because the cookie can be seen at layer 7 
-  - Used to ensure the user doesn’t lose his session data, like login or cart info, while navigating between web pages.
-  - Stickiness may cause load imbalance
-  - Cookies could be:
-    - Application-based (TTL defined by the application)
-    - Load Balancer generated (TTL defined by the load balancer)
-  - ELB reserved cookie names (should not be used):
-    - AWSALB
-    - AWSALBAPP
-    - AWSALBTG
+ __Logs__
+ 
+ - Used to store application logs
+ - __Log Event__ This is the record of what happened. It contains a timestamp and the data. 
+ - __Log Stream__ A collection of __log events__ from the same source create a __log stream__.Think of one
+continuous set of logs from a single instance
+ - __Log Group__ This is a collection of log streams. For example, you’d group all your Apache
+web server logs across hosts together.
+ 
+ __Metric Filters__ can be used to filter expressions and use the count to trigger CloudWatch alarms. They apply only on the incoming metrics after the metric filter was created. Example filters:
+   - find a specific IP in the logs
+   - count occurrences of “ERROR” in the logs
+   
+ __Cloud Watch Logs Insights__ can be used to query(Sql) logs and add queries to CloudWatch Dashboards 
+ 
+ __Subscription Filter__ To stream logs in real-time, apply a Subscription Filter on logs
+ 
+ 
+ __Alarms__
+ 
+- Alarms are used to trigger notifications for any metric
+- Various options (sampling, %, max, min, etc…)
+- Alarm States: OK, INSUFFICIENT_DATA, ALARM
+- Alarm Targets:
+  - Stop, Terminate, Reboot, or Recover an EC2 Instance
+  - Trigger Auto Scaling Action 
+  - Send notification to SNS
+  
+__EventBridge__
+- Schedule or Cron to create events on a schedule
+- Event Pattern: Event rules to react to a service doing something
+- Trigger Lambda functions, send SQS/SNS messages
 
-- __Cross-zone Load Balancing__
-- Allows ELBs in different AZ containing unbalanced number of instances to distribute the traffic evenly across all instances in all the AZ registered under a load balancer.
-- Supported Load Balancers
-  - Classic Load Balancer : Disabled by default
-  - Application Load Balancer : Always on (can’t be disabled)
-  - Network Load Balancer : Disabled by default
+# CloudTrail
 
-    
+ - Provides governance, compliance and audit for your AWS Account
+ - CloudTrail is enabled by default!
+ - __Get an history of events / API__ calls made within your AWS Account
+ - Can put logs from CloudTrail into __CloudWatch Logs__ or __S3__
+ - __A trail can be applied to All Regions (default) or a single Region__
+ - If a resource is deleted in AWS, investigate CloudTrail first
+ - __Event retention: 90 days__
+ 
+ __CloudTrail Events__
+ 
+   - __Management Events__
+  
+     - Events of operations that modify AWS resources :
+       - Creating a new IAM user
+       - Deleting a subnet
+     - Enabled by default
+     - Can separate Read Events (that don’t modify resources) from Write Events (that may modify resources)
+   
+   - __Data Events__
+     - By default, data events are not logged (because high volume operations)
+     - Events of operations that modify data:
+       - Amazon S3 object-level activity (ex: GetObject, DeleteObject, PutObject)
+       - AWS Lambda function execution activity (the Invoke API)
+       
+   - __CloudTrail Insights Events__
+     - Enable CloudTrail Insights to detect unusual activity in your account
+       - inaccurate resource provisioning 
+       - hitting service limits
+       - Bursts of AWS IAM actions
+       
+      - CloudTrail Insights analyzes normal management events to create a baseline and then continuously analyzes write events to detect unusual patterns. If that happens, CloudTrail generates insight events that
+        - show anomalies in the Cloud Trail console
+        - can can be logged to S3
+        - can trigger an EventBridge event for automation
 
+# Config
+- Helps with auditing and recording compliance of your AWS resources
+- Record configurations changes over time
+- __Evaluate compliance of resources using config rules__
+- Does not prevent non-compliant actions from happening (no deny)
+- Questions that can be solved by AWS Config:
+   - Is there unrestricted SSH access to my security groups?
+   - Do my buckets have any public access?
+   - How has my ALB configuration changed over time? 
+- You can receive alerts (SNS notifications) for any changes
+
+- __Remediation__
+  - utomate remediation of non-compliant resources using __SSM Automation Documents__
+    - AWS-Managed Automation Documents
+    - Custom Automation Documents to invoke a Lambda function for automation 
+  - You can set Remediation Retries if the resource is still non-compliant after auto remediation 
