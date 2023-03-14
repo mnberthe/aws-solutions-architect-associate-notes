@@ -119,7 +119,6 @@
 - [CloudWatch](#cloudwatch)
 - [CloudTrail](#cloudtrail)
 - [Config](#config)
-- [X-Ray](#x-ray)
 - [Trusted Advisor](#trusted-advisor)
 - [Cost explorer](#cost-explorer)
 
@@ -392,7 +391,7 @@ The goal of an Auto Scaling Group (ASG) is to:
     - ASG maintains a CloudWatch metric and scale accordingly (automatically creates CW alarms)
     - Ex. maintain CPU usage at 40%
    
- __Predictive Scaling__
+ - __Predictive Scaling__
     - Historical data is used to predict the load pattern using ML and scale automatically
 
 
@@ -721,7 +720,7 @@ __RDS Multi AZ for Disaster Recovery__
 - When failing over, __RDS flips the CNAME record__ for the DB instance to point at the standby, which is in turn promoted to become the new primary.
 - Cannot be used for scaling as the standby database cannot take read/write operation
 
-# Amazon Aurora
+## Amazon Aurora
 - Aurora is a proprietary technology from AWS (not open sourced)
 - Postgres and MySQL are both supported as Aurora DB
 - Aurora is “AWS cloud optimized” and claims __5x performance improvement over MySQL on RDS, over 3x the performance of Postgres on RDS__
@@ -789,7 +788,7 @@ __Aurora Global Database__
 - Caches are in-memory databases with really high performance, low latency
 - Helps make your application stateless, because it doesn’t have to cache locally
 
-# DynamoDB
+## DynamoDB
 
 - Fully managed, highly available with replication across multiple AZs
 - NoSQL database - not a relational database - __with transaction support__
@@ -843,20 +842,20 @@ __DynamoDB Global Tables__
 - Replication latency under 1 second
 - __Must enable DynamoDB Streams as a pre-requisite__
 
-# DocumentDB
+## DocumentDB
 - Aurora is an “AWS-implementation” of PostgreSQL / MySQL …
 - __DocumentDB is the same for MongoDB (which is a NoSQL database)__
 - Fully Managed, highly available with replication across 3 AZ
 - DocumentDB storage automatically grows in increments of 10GB, up to 64 TB.
 - Automatically scales to workloads with millions of requests per seconds
 
-# Amazon Neptune
+## Amazon Neptune
 - Fully managed __graph database__
 - A popular graph dataset would be a __social network__
 - Highly available across 3 AZ, with up to 15 read replicas
 - Highly available with replications across multiple AZs
 
-# Amazon QLDB
+## Amazon QLDB
 
 - QLDB stands for ”Quantum Ledger Database”
 - A ledger is a book __recording financial transactions__
@@ -866,12 +865,16 @@ __DynamoDB Global Tables__
 - You cannot update a record (i.e.,replace old content) in a ledger database. Instead, an update adds a new record to the databas
 - __Use case__ : __financial transactions__, supply chain, cryptocurrencies, such as Bitcoin, blockchain
 
-# Amazon Timestream
+## Amazon Timestream
 
 - Fully managed, fast, scalable, serverless __time series database__
 - Automatically scales up/down to adjust capacity
 - Encryption in transit and at rest
 - __Use cases__: IoT apps, operational applications, real time analytics, …
+
+# Decoupling applications 
+
+
 
 # Networking
 
@@ -1313,3 +1316,27 @@ __EventBridge__
     - AWS-Managed Automation Documents
     - Custom Automation Documents to invoke a Lambda function for automation 
   - You can set Remediation Retries if the resource is still non-compliant after auto remediation 
+
+# Trusted Advisor
+- Analyze your AWS accounts and provides recommendation:
+  - Cost Optimization
+    - low utilization EC2 instances, EBS volumes, idle load balancers, etc.
+    - Reserved instances & savings plans optimizations 
+  - Performance
+    - High utilization EC2 instances, CloudFront CDN optimizations 
+    - EC2 to EBS throughput optimizations, Alias records recommendations
+  - Security
+    - MFA enabled on Root Account, IAM key rotation, exposed Access Keys
+    - S3 Bucket Permissions for public access, security groups with unrestricted ports 
+  - Fault Tolerence
+    - EBS snapshots age, Availability Zone Balance
+    - ASG Multi-AZ, RDS Multi-AZ, ELB configuration, etc 
+  - Service limit
+    - whether or not you are reaching the service limit for a service and suggest you to increase the limit beforehand 
+
+
+# Cost Explorer
+- Visualize, understand, and manage your AWS costs and usage over time
+- Create custom reports that analyze cost and usage data. 
+- Analyze your data at a high level: total costs and usage across all accounts
+- __Forecast usage up to 12 months based on previous usage__
