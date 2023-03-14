@@ -411,7 +411,8 @@ There are 4 types of scaling we can use to adjust our relational database perfor
 - __Vertical Scaling__
   - Resizing the database from one size(ex EC2 t2micro) to another(ex EC2 t3 large) can create greater performance. 
 
-__No Relational Database scaling __
+__No Relational Database scaling__
+
 - __DynamoDB__ scaling is simplified when using dynomoDB
 
 # Storage
