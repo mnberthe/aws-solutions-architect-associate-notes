@@ -33,6 +33,13 @@
 - [Amazon QLDB](#amazon-qldb)
 - [Amazon Timestream](#amazon-timestream)
 
+### Decoupling applications 
+- [SQS](#sqs)
+- [SNS](#sns)
+- [Kinesis](#kinesis)
+- [Amazon MQ](#amazon-mq)
+- [Event Brigde](#event-bridge)
+
 ### Data & Analytics
 - [Athena](#athena)
 - [Redshift](#)
@@ -56,13 +63,6 @@
 ### Disaster Recovery 
 - [Disaster Recovery](#disaster)
 - [Aws backup](#aws-backup)
-
-### Decoupling applications 
-- [SQS](#sqs)
-- [SNS](#sns)
-- [Kinesis](#kinesis)
-- [Amazon MQ](#amazon-mq)
-- [Event Brigde](#event-bridge)
 
 ### Machine Leanrning
 - [Rekognito](#rekognito)
@@ -1253,7 +1253,7 @@ For Simple Notification Service
      - __Using a message de-duplication ID__: messages with the same __de-duplication ID__ are considered duplicates
  - __Message Grouping__
    - Group messages based on __MessageGroupID__ to send them to different consumers
-   - Same value for MessageGroupID
+   - Same value for __MessageGroupID__
      - All the messages are in order
      - Single consumer
    - Different values for MessageGroupID
@@ -1373,7 +1373,7 @@ __FIFO Topics__
 - Ingest real-time data such as: Application logs, Metrics, Website clickstreams,
 IoT telemetry data…
 
-## Kinesis Data Streams 
+### Kinesis Data Streams 
 - Real-time data streaming service
 - __Used to ingest data in real time directly from source__
 - Retention between 1 day to 365 days
@@ -1396,8 +1396,41 @@ IoT telemetry data…
    - Default capacity provisioned (4 MB/s in or 4000 records per second)
    - Scales automatically based on observed throughput peak during the last 30 days
    - Pay per stream per hour & data in/out per GB
-   
-## Kinesis Data Firehose 
+  
+  ![image](https://user-images.githubusercontent.com/35028407/225446271-ac6c3c50-515f-4fbe-afcd-5727bfdff773.png)
+
+### Amazon MQ
+
+- If you have some traditional applications running from on-premise, they may use open protocols such as __MQTT, AMQP, STOMP, Openwire, WSS, etc__. When migrating to the cloud, instead of re-engineering the application to use SQS and SNS (AWS proprietary), we can use Amazon MQ (managed Apache ActiveMQ) for communication. 
+- Doesn’t “scale” as much as SQS or SNS because it is provisioned 
+- Runs on a dedicated machine (can run in HA with failover)
+- __Has both queue feature (SQS) and topic features (SNS)__
+ 
+### Kinesis Data Firehose 
+
+- Fully Managed Service, no administration, automatic scaling, serverless
+- Used to load streaming data into a target location with optional transformation
+- Can ingest data in real time directly from source
+- Destinations:
+  - __AWS: Redshift, S3, OpenSearch__
+  - 3rd party: Splunk, MongoDB, DataDog, NewRelic, etc.
+  - Custom HTTP endpoint
+  - Supports custom data transformation using Lambda functions
+  - No replay capability (does not store data like KDS)
+
+![image](https://user-images.githubusercontent.com/35028407/225447015-a7b9e3ee-e23a-48eb-81ca-2f85b8eeba66.png)
+
+
+### Event Bridge
+- Schedule or Cron to create events on a schedule
+- Event Pattern: Event rules to react to a service doing something
+- Trigger Lambda functions, send SQS/SNS messages
+
+
+# Data & Analytics
+
+### Kinesis Data Analytics (KDA)
+
 
 # Monitoring & Audit
 
@@ -1460,11 +1493,7 @@ web server logs across hosts together.
   - Stop, Terminate, Reboot, or Recover an EC2 Instance
   - Trigger Auto Scaling Action 
   - Send notification to SNS
-  
-__EventBridge__
-- Schedule or Cron to create events on a schedule
-- Event Pattern: Event rules to react to a service doing something
-- Trigger Lambda functions, send SQS/SNS messages
+ 
 
 # CloudTrail
 
