@@ -1216,6 +1216,49 @@ __Health Checks__
       - Route 53 health checkers are outside the VPC. They can’t access private endpoints (private VPC or on-premises resources).
       - Create a CloudWatch Metric and associate a CloudWatch Alarm to it, then create a Health Check that checks the Cloud watch alarm.  
 
+
+# Decoupling applications
+
+- Synchronous between applications can be problematic if there are sudden spikes of traffic
+- What if you need to suddenly encode 1000 videos but usually it’s 10?
+- In that case, it’s better to decouple your applications:
+  - using SQS: queue model
+  - using SNS: pub/sub model
+  - using Kinesis: real-time streaming model 
+- These services can scale independently from our application 
+
+## SQS
+- Used to asynchronously decouple applications
+- Supports multiple producers & consumers
+- The consumer polls the queue for messages. Once a consumer processes a message, it __deletes__ it from the queue using __DeleteMessage API__.
+- __Max message size: 256KB__
+- __Default message retention: 4 days (max: 14 days)__
+- __Consumers could be EC2 instances or Lambda functions, Kinesis__
+
+ ### Queue Types
+ 
+ #### Standard Queue
+ - Unlimited throughput (publish any number of message per second into the queue)
+ - Low latency (<10 ms on publish and receive)
+ - Can have duplicate messages (at least once delivery)
+ - Can have out of order messages (best effort ordering)
+ 
+ #### FIFO Queue
+ 
+ - Limited throughput: 300 msg/s without batching, 3000 msg/s with
+ - Messages are processed in order by the consumer
+ - __Message De-duplication__:
+   - __De-duplication interval__: 5 min (duplicate messages will be discarded only if they are sent less than 5 mins apart)
+   - __De-duplication methods__:
+     - Content-based de-duplication: computes the hash of the message body and compares
+     - Using a message de-duplication ID: messages with the same de-duplication ID are considered duplicates
+ - __Message Grouping__
+   - Group messages based on MessageGroupID to send them to different consumers
+
+## SNS
+
+## Kinesis
+
 # Monitoring & Audit
 
 ## CloudWatch
