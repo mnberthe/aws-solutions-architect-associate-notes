@@ -1227,9 +1227,11 @@ __Health Checks__
   - using Kinesis: real-time streaming model 
 - These services can scale independently from our application 
 
-## SQS
+## SQS 
+For Simple Notification Service
 - Used to asynchronously decouple applications
 - Supports multiple producers & consumers
+- The message is persisted in SQS until a consumer deletes it
 - The consumer polls the queue for messages. Once a consumer processes a message, it __deletes__ it from the queue using __DeleteMessage API__.
 - __Max message size: 256KB__
 - __Default message retention: 4 days (max: 14 days)__
@@ -1237,26 +1239,138 @@ __Health Checks__
 
  ### Queue Types
  
- #### Standard Queue
+ ### Standard Queue
  - Unlimited throughput (publish any number of message per second into the queue)
  - Low latency (<10 ms on publish and receive)
  - Can have duplicate messages (at least once delivery)
  - Can have out of order messages (best effort ordering)
  
- #### FIFO Queue
+ ### FIFO Queue
  
  - Limited throughput: 300 msg/s without batching, 3000 msg/s with
  - Messages are processed in order by the consumer
  - __Message De-duplication__:
    - __De-duplication interval__: 5 min (duplicate messages will be discarded only if they are sent less than 5 mins apart)
    - __De-duplication methods__:
-     - Content-based de-duplication: computes the hash of the message body and compares
-     - Using a message de-duplication ID: messages with the same de-duplication ID are considered duplicates
+     - __Content-based de-duplication__: computes the hash of the message body and compares
+     - __Using a message de-duplication ID__: messages with the same __de-duplication ID__ are considered duplicates
  - __Message Grouping__
-   - Group messages based on MessageGroupID to send them to different consumers
+   - Group messages based on __MessageGroupID__ to send them to different consumers
+   - Same value for MessageGroupID
+     - All the messages are in order
+     - Single consumer
+   - Different values for MessageGroupID
+     - Messages will be ordered for each group ID
+     - Ordering across groups is not guaranteed(messages that belong to different message groups)
+     - Each group ID can have a different consumer (parallel processing)
+     
+ ### Consumer Auto Scaling
+ 
+ We can attach an ASG to the consumer instances which will scale based on the CW metric __Queue Length__(ApproximateNumberOfMessages)
+ CW alarms can be triggered to step scale the consumer application.
+ 
+ ### Security
+ 
+ __Encryption__
+ - In-flight encryption using HTTPS API
+ - At-rest encryption using KMS keys
+ - Client-side encryption if the client wants to perform encryption/decryption itself 
+ 
+ __Access Controls__ : IAM policies to regulate access to the SQS API
+ 
+ __SQS Access Policies(resource based policy)__
+   - Useful for cross-account access to SQS queues
+   - Useful for allowing other services (SNS, S3…) to write to an SQS queue
+ 
+ ### Configurations
+ __Message Visibility Timeout__
+ - After a message is polled by a consumer, it becomes __invisible__ to other consumers
+ - By default, the “message visibility timeout” is __30 seconds__
+ - That means the message has __30 seconds__ to be processed
+ - After the message visibility timeout is over, the message is “visible” in SQS
+ - A consumer could call the __ChangeMessageVisibility__ API to get more time
+ - If visibility timeout is high (hours), and consumer crashes, re-processing will take time
+ - If visibility timeout is too low (seconds), we may get duplicates
+ 
+ ![image](https://user-images.githubusercontent.com/35028407/225288979-b11b0e56-47cf-4017-9118-cad881cb83f8.png)
+
+
+__Dead Letter Queue (DLQ)__
+- An SQS queue used to store failing to be processed messages in another queue
+- After the __MaximumReceives__(the number of times that a message can be received before being sent to a dead-letter queue) threshold is exceeded, the message goes into the DLQ
+- __Redrive to Source__ - once the bug in the consumer has been resolved, messages in the DLQ can be sent back to the queue (original queue or a custom queue) for processing
+- Prevents resource wastage
+- Recommended to set a high retention period for DLQ (14 days)
+
+__Queue Delay/Delivery Delay__
+ - Delay message delivery
+- Consumers see the message after some delay
+- Default: 0 (Max: 15 min)
+- Can be set at the queue level
+
+__Long Polling__
+
+- When a consumer requests messages from the queue, it can optionally “wait” for messages to arrive if there are none in the queue
+- This is called Long Polling
+- Decreases the number of API calls made to __SQS (cheaper)__
+- Reduces latency (incoming messages during the polling will be read instantaneously)
+- Polling time: 1 sec to 20 sec
+- Long Polling is preferred over Short Polling
+- Can be enabled at the queue level or at the consumer level by using __WaitTimeSeconds__ parameter in__ ReceiveMessage__ API.
+
+__SQS + Lambda + DLQ__
+
+Failed messages (after the set number of retries) are sent to the DLQ by the SQS queue
+![image](https://user-images.githubusercontent.com/35028407/225288575-42fd9606-21e8-4012-a7d4-51d6b51ac450.png)
+
 
 ## SNS
+For SNS for Simple Queue Service
+- Pub-Sub model (publisher publishes messages to a topic, subscribers listen to the topic)
+- Instant message delivery (does not queue messages)
 
+__Security__
+
+__Encryption__
+ - In-flight encryption using HTTPS API
+ - At-rest encryption using KMS keys
+ - Client-side encryption if the client wants to perform encryption/decryption itself 
+ 
+__Access Controls__ : IAM policies to regulate access to the SNS API
+ 
+__SNS Access Policies(resource based policy)__
+ - Useful for cross-account access to SNS queues
+ - Useful for allowing other services (S3…) to write to an SNS queue
+ 
+ __Standard Topics__
+ - Highest throughput
+ - At least once message delivery
+ - Best effort ordering
+ - Subscribers can be:
+   - SQS queue
+   - HTTP / HTTPS endpoints
+   - Lambda functions
+   - Emails (using SNS)
+   - SMS & Mobile Notifications
+   - Kinesis Data Firehose (KDF) to send the data into S3 or Redshift
+
+__FIFO Topics__
+  - Guaranteed ordering of messages in that topic
+  - Publishing messages to a FIFO topic requires:
+    - __Ordering__ by Message Group ID (all messages in the same group are ordered)
+    - __Deduplication using__ a Deduplication ID or Content Based Deduplication
+  - Can only have SQS FIFO queues as subscribers
+  - __Limited throughput__ (same as SQS FIFO) because only SQS FIFO queues can read from FIFO topics
+  
+  __SNS + SQS Fanout Pattern__
+  
+  - Fully decoupled, no data loss
+  - SQS allows for: data persistence, delayed processing and retries of work
+  - Make sure your SQS queue access policy allows for SNS to write
+  
+  ![image](https://user-images.githubusercontent.com/35028407/225294978-dfb124e9-1b77-4355-bed4-b6569b7b68ba.png)
+
+  
 ## Kinesis
 
 # Monitoring & Audit
