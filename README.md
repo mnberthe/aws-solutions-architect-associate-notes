@@ -17,6 +17,7 @@
 - [S3](#s3)
 - [EBS](#ebs)
 - [EFS](#efs)
+- [Instance Store](#instance-store)
 - [FSx](#fsx)
 - [Storage Gateway](#storagegateway)
 - [Snowball Edge](#snowballedge)
@@ -125,18 +126,21 @@
 # Compute services
 
 ## EC2 
-EC2 (Elastic Compute Cloud) is an  __Infrastructure as a Service (IaaS)__\
-Storage space:
- - Network attached __(EBS & EFS)__
- - Direct attached(Hardware) __(EC2 Instance Store)__\
-Firewall rules: __security group__
 
-Static IPv4 addresses known as Elastic IP addresses\
-Bootstrap script (Execute only at first launch): EC2 User Data\
-MetaData is data about your EC2 instance 
+- EC2 (Elastic Compute Cloud) is an  __Infrastructure as a Service (IaaS)__
+- Storage space:
+   - Network attached __(EBS & EFS)__
+   - Direct attached(Hardware) __(EC2 Instance Store)__
+- Firewall rules: __security group__
+- Static IPv4 addresses known as Elastic IP addresses
+- Bootstrap script (Execute only at first launch): EC2 User Data
+- MetaData is data about your EC2 instance 
 - This can include information such as private IP address, public IP address, hostname, security groups, etc.
 - __Url to fetch metadata about the instance (http://169.254.169.254/latest/meta-data)__
 
+__IAM Roles for EC2 instances__
+
+- Never enter AWS credentials into the EC2 instance, instead attach IAM Roles to the instances
 
 __EC2 Instance Types__
 
@@ -244,11 +248,14 @@ __Spread__
 - Recommended for applications that have a small number of critical instances that should be kept separate from each other
 - Multi AZ, same region
 - max 7 instances per group per AZ
+- __Reduce risk of simulataneous failure__
 
 __Partition__
 - Each partition placement group has its own set of racks. Each rack has its own network and power source. 
 - Multiple AZs in the same region
+- Up to 7 partitions per AZ
 - Up to 100s of EC2 instances
+- __Isolate from failure__
 
 __Networking with EC2__
 
@@ -290,6 +297,21 @@ __Hibernation__
 
 # High availability and scalability 
 
+- __Vertical Scaling__: Increase instance size (= scale up / down)
+    - From: t2.nano - 0.5G of RAM, 1 vCPU
+    - To: u-12tb1.metal – 12.3 TB of RAM, 448 vCPUs
+    - Hardware limit
+    - Use case : Non distribuate system like database
+    
+- __Horizontal Scaling__: Increase number of instances (= scale out / in)   
+   - Auto Scaling Group
+   - Load Balancer
+
+- __High Availability__
+  - Run instances for the same application across multi AZ
+  - Auto Scaling Group multi AZ
+  - Load Balancer multi AZ
+
 ## Elastic Load Balancer
 
 - Spread load across multiple EC2 instances
@@ -303,7 +325,7 @@ __Hibernation__
 __Types__
 - __Classic Load Balancer (CLB) - deprecated__
   - __Load Balancing to a single application__
-  - Supports HTTP, HTTPS (layer 7) & TCP (layer 4)
+  - Supports HTTP, HTTPS (layer 7) & TCP (layer 4), SSL
   - Health checks are HTTP or TCP based
   - Provides a fixed hostname (xxx.region.elb.amazonaws.com)
 
@@ -332,29 +354,36 @@ __Types__
     - Source IP address
 
 - __Network Load Balancer (NLB)__
-  - Operates at Layer 4 (TCP, UDP)
+  - Operates at Layer 4 (TCP, UDP, TLS over TCP)
   - Can handle millions of request per seconds (extreme performance)
   - Lower latency ~ 100 ms (vs 400 ms for ALB
-  - __1 static public IP per AZ (vs a static hostname for CLB & ALB)__
-  - Health Checks support the TCP, HTTP and HTTPS Protocols
+  - __1 static public IP per AZ__
+  - Health Checks support the __TCP, HTTP and HTTPS Protocols__
   - __No security groups can be attached to NLBs__. Since they operate on layer 4, they cannot see the data available at layer 7. They just forward the   incoming traffic to the right target group as if those requests were directly coming from client. So, the attached instances must __allow TCP traffic     on port 80 from anywhere__.
-  - Within a target group, NLB can send traffic to
+  - Within a __target group, NLB can send traffic to__
     - EC2 instances
-    - IP addresses
+    - IP addresses( must be private IPs)
     - Application Load Balancer (ALB)
 
 - __Gateway Load Balancer (GWLB)__
-  - Operates at layer 3 (Network layer) - IP Protocol
-  - Used to route requests to a fleet of 3rd party virtual appliances like Firewalls, Intrusion Detection and Prevention Systems (IDPS), etc.
+  - Operates at layer 3 (Network layer) - IP packets
+  - Used when you want to inspect, analyze the traffic at network level before coming to your ELB or EC2 etc
+  - Used to route requests to a __fleet of 3rd party virtual appliances__ like Firewalls, Intrusion Detection and Prevention Systems (IDPS), etc.
+  - Then after inspection by the 3rd Party route back the traffic to your instances or ELB
+  - target :
+    - EC2 instances
+    - IP adresses(must be private) 
 
 - __Sticky Sessions (Session Affinity)__
-  - Requests coming from a client is always redirected to the same instance based on a cookie After the cookie expires, the requests coming from the same user might be redirected to another instance
+  - Requests coming from a client is always redirected to the same instance based on a cookie After the cookie expires, the requests coming from the same user might be redirected to __another instance__
+
+
   - __Only supported by CLB & ALB__ because the cookie can be seen at layer 7 
   - Used to ensure the user doesn’t lose his session data, like login or cart info, while navigating between web pages.
   - Stickiness may cause load imbalance
   - Cookies could be:
-    - Application-based (TTL defined by the application)
-    - Load Balancer generated (TTL defined by the load balancer)
+    - __Application-based (TTL defined by the application)__ 
+    - __Load Balancer generated (TTL defined by the load balancer)__
   - ELB reserved cookie names (should not be used):
     - AWSALB
     - AWSALBAPP
@@ -364,9 +393,26 @@ __Types__
 - Allows ELBs in different AZ containing unbalanced number of instances to distribute the traffic evenly across all instances in all the AZ registered under a load balancer.
 - Supported Load Balancers
   - Classic Load Balancer : Disabled by default
-  - Application Load Balancer : Always on (can’t be disabled)
+  - Application Load Balancer : Always on (can be disabled at the target group level)
   - Network Load Balancer : Disabled by default
-  
+
+- __Security__
+ - The load balancer uses an X.509 certificate (SSL/TLS server certificate)
+ - You can manage certificates using ACM (AWS Certificate Manager)
+ - You can create upload your own certificates alternatively 
+ - __Server Name Indication (SNI)__
+   - SNI solves the problem of loading multiple SSL certificates onto one web server (to serve multiple websites)
+   - It’s a “newer” protocol, and requires the client to indicate the hostname of the target server in the initial SSL handshake 
+   - The server will then find the correct certificate, or return the default one
+   - __Does not work for CLB__ work with ALB and NLB
+
+- __Connection Draining__
+ - Connection Draining – for CLB
+ - Deregistration Delay – for ALB & NLB
+ - Time to complete __in-flight requests__ while the instance is de-registering or unhealthy
+ - Stops sending new requests to the EC2 instance which is de-registering
+ - Between 1 to 3600 seconds (default: 300 seconds)
+
 ## Auto Scaling Group
 
 The goal of an Auto Scaling Group (ASG) is to:
@@ -382,22 +428,26 @@ The goal of an Auto Scaling Group (ASG) is to:
  - __Scheduled Scaling__
     - Scale based on a schedule
     - Used when the load pattern is predictable
-
+    - Anticipate a scaling based on known usage patterns
+    
  - __Simple Scaling/Step Scaling__
     - Scale to certain size on a CloudWatch alarm (ex average CPU utilization in all ASG instances)
-    - Ex. when CPU > 90%, then scale to 10 instances
+    - When a CloudWatch alarm is triggered (example CPU > 70%), then add 2 units
+    - When a CloudWatch alarm is triggered (example CPU < 30%), then remove 1
   
  - __Target Tracking Scaling__
-    - ASG maintains a CloudWatch metric and scale accordingly (automatically creates CW alarms)
+    - ASG maintains a CloudWatch metric and scale accordingly to maintain the target defined
     - Ex. maintain CPU usage at 40%
    
  - __Predictive Scaling__
     - Historical data is used to predict the load pattern using ML and scale automatically
 
-__Warm-Up__
-Stops instances from being placed behind the load balancer, failing the health check, and being terminated
+__Cooldown__ 
+ - After a scaling activity happens, the ASG goes into cooldown period (default 300 seconds) during which it does not launch or terminate additional instances (ignores scaling requests) to allow the metrics to stabilize.
+ - Use a ready-to-use AMI to launch instances faster to be able to reduce the cooldown period
 
-__Cooldown__ Pauses Auto Scaling for a set amount of time. Helps to avoid runaway scaling events.
+__Warm-Up__
+- Warm-up value for Instances allows you to control the time until a newly launched instance can contribute to the CloudWatch metrics, so when warm-up time has expired, an instance is considered to be a part Auto Scaling group and will receive traffic
 
 __Relational Database scaling (RDS)__
 
@@ -651,6 +701,13 @@ __Storage Tiers__
    - __Standard__ For frequently accessed files  
    - __Infrequently Accessed__ For files not frequently accessed
    
+# Instance Store
+- EBS volumes are network drives with good but “limited” performance
+- If you need a high-performance hardware disk, use EC2 Instance Store
+- Better I/O performance
+- EC2 Instance Store lose their storage if they’re stopped (ephemeral)
+- Good for buffer / cache / scratch data / temporary content 
+
 
 # FSX
 __FSx for Windows__
@@ -728,7 +785,8 @@ __RDS Read Replicas for read scalability AKA Performance__
 - A read-only copy of your primary database in the same AZ, cross-AZ, or cross-region
 - Used to increase or scale read performance.
 - Up to 5 Read Replicas
-- Replicas can be promoted to their own DB
+- Replication is __ASYNC__ so reads are eventually consistent
+- Replicas can be __promoted__ to their own DB
 - Applications must update the connection string to leverage read replicas
 
 __RDS Multi AZ for Disaster Recovery__
@@ -737,8 +795,18 @@ __RDS Multi AZ for Disaster Recovery__
 - __Synchronous replication__
 - One DNS name, so __connection string does not require to be updated__(both the databases can be accessed by one DNS name\
  which allows for automatic DNS failover to standby database)
-- When failing over, __RDS flips the CNAME record__ for the DB instance to point at the standby, which is in turn promoted to become the new primary.
+- When failing over, __RDS flips the CNAME(map hostname to another hostname, so map dns name to to standby dns name) record__ for the DB instance to point at the standby, which is in turn promoted to become the new primary.
 - Cannot be used for scaling as the standby database cannot take read/write operation
+- The __Read Replicas__ can be setup as Multi AZ for __Disaster Recovery(DR)__
+
+__RDS From Single-AZ to Multi-AZ__
+
+- Zero downtime operation (no need to stop the DB)
+- Just click on “modify” for the database
+- The following happens internally
+  - A snapshot is taken
+  - A new DB is restored from the snapshot in a new AZ
+  - Synchronization is established between the two databases
 
 ## Amazon Aurora
 - Aurora is a proprietary technology from AWS (not open sourced)
