@@ -100,7 +100,7 @@
 
 
 ### Access Management 
-- [Identity & Access Management (IAM)](#iam)
+- [Identity Access Management](#identity-access-management)
 - [Cognito](#cognito)
 - [Security Token Service (STS)](#sts)
 - [Identity Federation in AWS](#identity-feration-in-aws)
@@ -1572,3 +1572,38 @@ web server logs across hosts together.
 - Create custom reports that analyze cost and usage data. 
 - Analyze your data at a high level: total costs and usage across all accounts
 - __Forecast usage up to 12 months based on previous usage__
+
+# Access Management
+
+### Identity Access Management
+
+- Groups are collections of users and have policies attached to them
+- User can belong to multiple groups
+- You should log in as an IAM user with admin access even if you have root access.
+-
+__Policies__
+
+ - Policies are JSON documents that outline permissions for users, groups or roles
+ - Two types:
+   - __User based policies__
+       - IAM policies define which API calls should be allowed for a specific user
+   - __Resource based policies__
+     - Control access to an AWS resource
+     - Grant the specified principal permission to perform actions on the resource and define under what conditions this applies    
+  
+  - An IAM principal can access a resource if the user policy ALLOWS it OR the resource policy ALLOWS it AND there’s no explicit DENY.
+  
+__Roles__
+ 
+ - Some AWS service will need to perform actions on your behalf
+ - To do so, we will assign permissions to AWS services with IAM Roles
+
+__Reporting Tools__
+
+ - __Credentials Report__ : lists all the users and the status of their credentials (MFA, password rotation, etc.)
+ - __Access Advisor__ : shows the service permissions granted to a user and when those services were last accessed
+
+__Assume Role vs Resource-based Policy__
+ - When you assume an IAM Role, you give up your original permissions and take the permissions assigned to the role
+ - When using a resource based policy, the principal doesn’t have to give up their permissions
+
