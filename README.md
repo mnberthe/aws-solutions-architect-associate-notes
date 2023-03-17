@@ -784,7 +784,7 @@ __RDS Read Replicas for read scalability AKA Performance__
 
 - A read-only copy of your primary database in the same AZ, cross-AZ, or cross-region
 - Used to increase or scale read performance.
-- Up to 5 Read Replicas
+- __Up to 5 Read Replicas__
 - Replication is __ASYNC__ so reads are eventually consistent
 - Replicas can be __promoted__ to their own DB
 - Applications must update the connection string to leverage read replicas
@@ -799,6 +799,9 @@ __RDS Multi AZ for Disaster Recovery__
 - Cannot be used for scaling as the standby database cannot take read/write operation
 - The __Read Replicas__ can be setup as Multi AZ for __Disaster Recovery(DR)__
 
+![image](https://user-images.githubusercontent.com/35028407/225748464-585f0ab9-6eac-4657-b2ef-db2bdb816bfc.png)
+
+
 __RDS From Single-AZ to Multi-AZ__
 
 - Zero downtime operation (no need to stop the DB)
@@ -808,12 +811,36 @@ __RDS From Single-AZ to Multi-AZ__
   - A new DB is restored from the snapshot in a new AZ
   - Synchronization is established between the two databases
 
+![image](https://user-images.githubusercontent.com/35028407/225748554-bd1454f8-d663-44e2-b4f2-c5fdcd255587.png)
+
+
+__RDS Backup__
+
+- __Automated Backups (enabled by default)__
+  - Daily full backup of the database (during the defined maintenance window)
+  - Backup retention: 7 days (max 35 days)
+  - Transaction logs are backed-up by RDS every 5 minutes (point in time recovery) 
+- __DB Snapshots__
+  - Manually triggered
+  - Backup retention: unlimited
+  -  in a stopped RDS database, you will still pay for storage. If you plan on
+stopping it for a long time, you should snapshot & restore instead
+
+__RDS Proxy__
+  - Fully managed database proxy for RDS
+  - Allows apps to pool and share DB connections established with the database
+  - mproving database efficiency by reducing the stress on database resources (e.g., CPU, RAM) and minimize open connections (and timeouts)
+  - Serverless, autoscaling, highly available (multi-AZ)
+  - __Reduced RDS & Aurora failover time by up 66%__
+  - __Enforce IAM Authentication for DB, and securely store credentials in AWS Secrets Manager__
+  - __RDS Proxy is never publicly accessible (must be accessed from VPC)__
+
 ## Amazon Aurora
 - Aurora is a proprietary technology from AWS (not open sourced)
 - Postgres and MySQL are both supported as Aurora DB
 - Aurora is “AWS cloud optimized” and claims __5x performance improvement over MySQL on RDS, over 3x the performance of Postgres on RDS__
 - Aurora storage automatically grows in increments of 10GB, up to 128 TB.
-- Up to 15 read replicas
+- __Up to 15 read replicas__
 - __Supports only MySQL & PostgreSQL__
 - Failover in Aurora is instantaneous.
 - Backtrack: restore data at any point of time without using backups
@@ -830,7 +857,7 @@ __Aurora High Availability__
 - Support for Cross Region Replication
 - __Automated failover__ A read replica is promoted as the new master in less than 30 seconds
 - In case no replica is available, Aurora will attempt to create a new DB Instance in the same AZ as the original instance
-- 
+
 __Aurora Read Scaling__
 
 - One Aurora Instance takes writes __(master)__
@@ -843,19 +870,25 @@ __Aurora Read Scaling__
     - Provides load-balancing for read replicas only (used to read only)
     - If the cluster has no read replica, it points to master (can be used to read/write) 
     - Each Aurora DB cluster has one reader endpoint
+    - When the client want to read the readerEndpoint will load balacing to a Read Replica 
+  - __Custom Endpoint__
+    - Used to point to a subset of replicas
+    - Provides load-balanced based on criteria other than the read-only or read-write capability of the DB instances like instance class (ex, direct   internal users to low-capacity instances and direct production traffic to high-capacity instances)
+    - When a custom endpoint is set a Reader Endpoint will not be used 
+
 
 __Aurora Serverless__
 
 - Optional
 - Automated database instantiation and auto scaling based on actual usage
-- Good for infrequent,intermittent or unpredictable workloads
+- __Good for infrequent,intermittent or unpredictable workloads__
 - No capacity planning needed
 - Pay per second, can be more cost effective
 
 __Aurora Multi-Master__
 
 - Optional
-- In case you want immediate failover for write node (High availability)
+- In case you want immediate __failover__ for write node (High availability)
 - Every node does R/W - vs promoting a Read Replica as the new master
 
 __Aurora Global Database__
@@ -868,6 +901,16 @@ __Aurora Global Database__
  - Up to 16 Read Replicas per secondary region
  - Helps for decreasing latency for clients in other geographical locations
  - __RTO of less than 1 minute__ (to promote another region as primary)
+
+__Aurora Backup__
+
+  - __Automated backups__
+    - 1 to 35 days (cannot be disabled) 
+    - point-in-time recovery in that timeframe
+  - __Manual DB Snapshots__
+    - Manually triggered by the user
+    - Retention of backup for as long as you want    
+    - Aurora clone is faster to create a new DB than form Snapshot
 
 # ElastiCache
 
@@ -1176,11 +1219,11 @@ its subdomains
 
   __Two types__
     - __Public Hosted Zone__
-     - resolves public domain names
-     - can be queried by anyone on the internet
+       - resolves public domain names
+       - can be queried by anyone on the internet
     - __Private Hosted Zone__
-     - resolves private domain names
-     - can only be queried from within the VPC
+       - resolves private domain names
+       - can only be queried from within the VPC
 
 __Record Types__
 
@@ -1218,11 +1261,13 @@ Each record contains:
   
   __Routing Policies__
   
+  Define how Route 53 responds to DNS queries
+  
   __Simple__
    - Route to one or more resources
    - If multiple values are returned, client chooses one at random 
    - No health check (if returning multiple resources, some of them might be unhealthy)
-   - If multiple values are returned, client chooses one at random 
+   - When Alias enabled, you can only specify one Aws resource as a target
 
    ![image](https://user-images.githubusercontent.com/35028407/224734496-073f89af-49e1-4c2e-9213-eef3ef3411f9.png)
    ![image](https://user-images.githubusercontent.com/35028407/224734556-e325660a-ab50-46a4-80d8-9a53ffd8e110.png)
@@ -1235,7 +1280,7 @@ __Weighted__
 
 __Failover(Active-Passive)__
 - Primary & Secondary Records (if the primary application is down, route to secondary application)
-- __Health check__ must be associated with the primary record
+- __Health check__ must be associated with the primary record, you can also associate health check to secondary
 - Used for __Active-Passive__ failover strategy
 
 __Latency-based__
@@ -1247,6 +1292,7 @@ __Latency-based__
 __Geolocation__
 
 - Routing based on the client's location
+- Specify location by Continent, Country
 - Should create a “Default” record (in case there’s no match on location)
 - __Use cases__: restrict content distribution & language preference
 - Can be associated with Health Checks
@@ -1264,10 +1310,12 @@ resources
 __Multi-value__
 - Route traffic to multiple resources (max 8)
 - Health Checks (only healthy resources will be returned)
+- __Multi-value is not subsitute for having an ELB, it the client side load balancing
+- At difference of simple routing all response returned are healthy 
   
 __Health Checks__
 - HTTP Health Checks are only for public resources
-- Allows for Automated DNS Failove
+- Automated for Automated DNS Failover
 - Three types:
   - Monitor an endpoint (application or other AWS resource)
     - Multiple global health checkers check the endpoint health
@@ -1277,10 +1325,9 @@ __Health Checks__
      - Combine the results of multiple Health Checks into one (AND, OR, NOT)
      - Specify how many of the health checks need to pass to make the parent pass
      - Usage: perform maintenance to your website without causing all health checks to fail
-    - Monitor CloudWatch Alarms (to perform health check on private resources)
+    - Monitor CloudWatch Alarms (to perform health check on private resources(Private Hosted Zone ))
       - Route 53 health checkers are outside the VPC. They can’t access private endpoints (private VPC or on-premises resources).
       - Create a CloudWatch Metric and associate a CloudWatch Alarm to it, then create a Health Check that checks the Cloud watch alarm.  
-
 
 # Decoupling applications
 
