@@ -3,7 +3,7 @@
 ### Compute services
 - [EC2](#ec2)
 - [Lambda](#lambda)
-- [Elastic Beanstalk](#elasticbeanstalk)
+- [Elastic Beanstalk](#elastic-beanstalk)
 - [Elastic Container Registry](#ecr)
 - [Elastic Container Service](#ecs)
 - [Elastic Kubernates Service](#EKS)
@@ -293,6 +293,20 @@ __Hibernation__
 - Under the hood: the RAM state is written to a file in the root EBS volume
 - The root EBS volume must be encrypted
 - __Instance RAM Size – must be less than 150 GB.__
+
+## Elastic Beanstalk
+
+- Used to deploy applications on AWS infrastructure
+- __Platform as a Service (PaaS)__
+- Automatically handles capacity provisioning, load balancing, scaling, application health monitoring, instance configuration, etc. but we have full control over the configuration
+- Free (pay for the underlying resources)
+- Supports versioning of application code
+- Can create multiple environment (dev, test, prod)
+- __Web & Worker Environments__
+  - __Web Environment (Web Server Tier)__: clients requests are directly handled by EC2 instances through a load balancer.
+  - __Worker Environment (Worker Tier)__: clients’s requests are put in a SQS queue and the EC2 instances will pull the messages to process them. Scaling depends on the number of SQS messages in the queue.
+  
+  ![image](https://user-images.githubusercontent.com/35028407/226097784-f6f083bf-cdc1-4f85-b9e6-bc38c76b45d3.png)
 
 
 # High availability and scalability 
