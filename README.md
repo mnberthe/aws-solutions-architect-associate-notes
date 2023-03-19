@@ -19,10 +19,8 @@
 - [EFS](#efs)
 - [Instance Store](#instance-store)
 - [FSx](#fsx)
-- [Storage Gateway](#storagegateway)
-- [Snowball Edge](#snowballedge)
-- [Snowmobile](#snowmobile)
-- [Aws Transfer Family](#awstransferfamily)
+- [Storage Gateway](#storage-gateway)
+- [Aws backup](#aws-backup)
 
 ### Database
 - [RDS](#rds)
@@ -53,17 +51,16 @@
 - [MSK Managed Streaming for Apache Kafka](#msk)
 - [Big Data Ingestion Pipeline](#data-pipeline)
 
-###  Migration
-- [DMS(Database Migration Service)](#dms)
-- [RDS & Aurora Migrations](#rds-aurora)
-- [On premises strategies with aws](#on-premises)
-- [MGN( Application migration service)](#mgn)
-- [Transfering large datasets](#tranfer)
-- [VMware cloud on aws](#vmWare)
+###  Migration & Transfer
+- [Snow Family](#snow-family)
+- [Database Migration Service](#database-migration-service)
+- [Application migration service](#application-migration-service)
+- [DataSync](#data-sync)
+- [AppSync](#app-sync)
+- [Transfer Family](#transfer-family)
 
 ### Disaster Recovery 
 - [Disaster Recovery](#disaster)
-- [Aws backup](#aws-backup)
 
 ### Machine Leanrning
 - [Rekognito](#rekognito)
@@ -496,6 +493,7 @@ __Versioning__
 - Protect against unintended deletes (ability to restore a version)
 - Easy roll back to previous version 
 - With versioning, all versions of an object are stored and can be retrieved, including deleted objects. 
+- Versioning can only be suspended once it has been enabled.
 
 __Amazon S3 – Replication__
 - __Must enable Versioning__ in source and destination buckets
@@ -515,17 +513,20 @@ __Security__
 
 - __User based security__
 
-- IAM policies define which API calls should be allowed for a specific user
-- Preferred over bucket policy for fine-grained access control
+  - IAM policies define which API calls should be allowed for a specific user
+  - Preferred over bucket policy for fine-grained access control
 
 - __Resource-Based__
 
- - __Bucket Policies__
-   - Grant public access to the bucket
-   - Force objects to be encrypted at upload
-   - Cross-account access
- - __Object Access Control List (ACL)__ - applies to the objects while uploading
- - __Bucket Access Control List (ACL)__ - access policy that applies to the bucket
+   - __Bucket Policies__
+     - Grant public access to the bucket
+     - Force objects to be encrypted at upload
+     - Cross-account access
+  -  __Object Access Control List (ACL)__ - applies to the objects while uploading
+  -  __Bucket Access Control List (ACL)__ - access policy that applies to the bucket
+  
+- __Note__: An IAM principal can access an S3 object if the IAM permission allows it or the bucket policy allows it and there is no explicit deny.
+
 
 __You can encrypt objects in S3 buckets using one of 4 methods__
 - __Encryption in Transit__
@@ -556,7 +557,7 @@ __You can encrypt objects in S3 buckets using one of 4 methods__
     - Clients must decrypt data themselves when retrieving from Amazon S3
 
 __Enforcing Encryption with a Bucket Policy__
-- A bucket policy can deny all PUT requests that don’t include the x-amz-server-sideencryption parameter in the request header
+- A bucket policy can deny all PUT requests that don’t include the x-amz-server-side encryption parameter in the request header
 
 
 __CORS__
@@ -567,7 +568,23 @@ __MFA Delete__
 - MFA will be required to:
   - Permanently delete an object version
   - Suspend Versioning on the bucket
-  
+- Bucket Versioning must be enabled
+- Can only be enabled or disabled by the root user
+
+__S3 Access Logs__
+
+- For audit purpose, you may want to log all access to S3 buckets
+- Any request made to S3, from any account, authorized or denied, will be logged into another __S3 bucket__
+- That data can be analyzed using data analysis tools
+- __The target logging bucket must be in the same AWS region__
+
+__Pre-signed URL__
+- Pre-signed URLs for S3 have temporary access token as query string parameters which allow anyone with the URL to temporarily access the resource before the URL expires (default 1h)
+- Pre-signed URLs inherit the permission of the user who generated it
+- Uses:
+  - Allow only logged-in users to download a premium video
+  - Allow users to upload files to a precise location in the bucket 
+
 __S3 Object Lock and Glacier Vault Lock__
 - Use S3 Object Lock to store objects using a __write once, read many (WORM)model__.
 - Object Lock comes in two modes: __governance mode and compliance mode.__
@@ -577,6 +594,7 @@ __S3 Object Lock and Glacier Vault Lock__
      by any user, including the root user in your AWS account
 
 __S3 Storage Classes__
+
 __S3 Standard – General Purpose__
   - Used for frequently accessed data
   - Low latency and high throughput
@@ -584,11 +602,13 @@ __S3 Standard – General Purpose__
   - Use cases include websites, content distribution, mobile and gaming applications, and big data analytics
 
 __S3 Standard-Infrequent Access (S3 Standard-IA)__
+  - __Infrequently accessed data(once a month)__
   - __Rapid Access__: Used for data that is accessed less frequently but requires rapid access when needed.
   - There is a low per-GB storage price and a per-GB retrieval fee
   - Use cases: __Disaster Recovery, backups__
 
 __S3 Intelligent-Tiering__
+  - Data with changing or unknown access patterns
   - Automatically moves your data to the most cost-effective tier based on how frequently you access each object.
 
 __S3 Glacier__
@@ -598,18 +618,29 @@ __S3 Glacier__
   - Millisecond retrieval, great for data accessed once a quarter  
   - Minimum storage duration of __90 days__
 - __Amazon S3 Glacier Flexible Retrieval__
+  - __Data accessed once a year__
   - Expedited (1 to 5 minutes)  
   - Standard (3 to 5 hours)
   - Bulk (5 to 12 hours)
   - Minimum storage duration of 90 days
 
 - __Amazon S3 Glacier Deep Archive – for long term storage__
+  - __Data accessed once a year__
   - Standard (12 hours)  
   - Bulk (48 hours)
   - Minimum storage duration of 180 days
 
 __S3 Lifecycle Management__
 - Lifecycle management automates moving your objects between thedifferent storage tiers, thereby maximizing cost effectiveness.
+
+__S3 Notification Events__
+
+- Optional
+- Generates events for operations performed on the bucket or objects
+- Targets:
+  - SNS topics
+  - SQS Standard queues (not FIFO queues)
+  - Lambda functions 
 
 __S3 performance__
 
@@ -745,8 +776,7 @@ __How differ  EFS, FSx for Windows, or FSx for Lustre__
   This will be for applications that do high performance computing (HPC), financial modeling, etc.\
   Remember that FSx for Lustre can store data directly on S3
  
-# Disaster Recovery 
- ## Aws Backup
+# Aws Backup
  
 Backup allows you to consolidate your backups across multiple AWS services, such as :
  - EC2
@@ -1343,6 +1373,60 @@ __Health Checks__
       - Route 53 health checkers are outside the VPC. They can’t access private endpoints (private VPC or on-premises resources).
       - Create a CloudWatch Metric and associate a CloudWatch Alarm to it, then create a Health Check that checks the Cloud watch alarm.  
 
+# Content delivery
+
+## CloudFront
+
+- Content Delivery Network (CDN)
+- __Improves read performance, content is cached at the edge__
+- Improves users experience
+- 216 Point of Presence globally __(edgelocations)__
+
+__Origins__
+
+ - __S3 bucket__
+   - For distributing files and caching them at the edge 
+   - Enhanced security with CloudFront Origin Access Control (OAC)
+   - __Origin Access Identity (OAl old version) or Origin Access Control (OAC new version)__ allows the S3 bucket to only be accessed by __CloudFront__
+   - CloudFront can be used as an ingress (to upload files to S3)
+ 
+ - __Custom Origin (HTTP)__
+   - Application Load Balancer
+   - EC2 instance
+   - S3 website (must first enable the bucket as a static S3 website) 
+   - Any HTTP backend you want
+
+__CloudFront Geo Restriction__
+  - You can restrict who can access your distribution
+    - __Allowlist :__
+      - Allow your users to access your content only if they're in one of the countries on a list of approved countries.  
+     - __Blocklist__
+       - Prevent your users from accessing your content if they're in one of the countries on a list of banned countries. 
+  - The “country” is determined using a 3rd party Geo-IP database
+  - Use case: Copyright Laws to control access to content
+
+__Pricing__
+
+- Price Class All: all regions (best performance)
+- Price Class 200: most regions (excludes the most expensive regions)
+- Price Class 100: only the least expensive regions
+
+# Global Accelerator
+
+- Leverage the AWS internal network to route to your application
+- __2 Anycast IP__ are created for your application
+- The Anycast IP send traffic directly to Edge Locations
+- The Edge locations send the traffic to your application
+- Endpoint could be public or private (could span multiple region):
+  - Elastic IP
+  - EC2 instances
+  - ALB
+  - NLB
+
+- __Disaster Recovery__
+  - Global Accelerator performs health checks for the application
+  - __Failover in less than 1 minute__ for unhealthy endpoints 
+
 # Decoupling applications
 
 - Synchronous between applications can be problematic if there are sudden spikes of traffic
@@ -1555,6 +1639,58 @@ IoT telemetry data…
 - Event Pattern: Event rules to react to a service doing something
 - Trigger Lambda functions, send SQS/SNS messages
 
+# Migration & Transfer
+
+## Snow Family
+
+- Highly-secure, portable devices to __collect and process data__ at the edge, and __migrate data into and out of AWS__
+-  Offline devices to perform data migrations
+- If it takes more than a week to transfer over the network, use Snowball devices!
+
+__Device__
+
+- __Snowcone__
+  - 2 CPUs, 4GB RAM, wired or wireless access
+  - __8 TB storage__
+  - Good for space-constrained environment
+  - __DataSync Agent__ is preinstalled
+  - When to use: __Up to 24 TB, online and offline__
+
+- __Snowball Edge__
+  - __Compute Optimized__
+    - 52 vCPUs, 208 GB of RAM
+    - __42 TB storage__
+    - Supports Storage Clustering
+  - __Storage Optimized__
+    - Up to 40 CPUs, 80 GB of RAM 
+    - __80 TB storage__
+    - Supports Storage Clustering (up to 15 nodes)
+    - Transfer up to petabytes
+  - __When to use: Up to petabytes(PB)__
+   
+- __Snowmobile__
+  - __100 PB storage__
+  - Used when __transferring > 10PB__
+  - Transfer up to exabytes
+  - Does not support Storage Clustering
+  - __When to use: Up to exabytes(EB)__
+
+
+__Edge Computing__
+
+- Process data while it’s being created on an edge location (could be anything that doesn’t have internet or access to cloud)
+- Devices for edge computing:
+  - Snowcone
+  - Snowball Edge 
+
+__Data migration__
+
+   - Physical data transport solution: __move TBs or PBs__ of data in or out of AWS 
+   - Pay per data transfer job
+   - Provide block storage and Amazon S3 compatible object storage
+   - __Snowball cannot import to Glacier directly__ (transfer to S3, configure a lifecycle policy to transition the data into Glacier)
+   - Need to install __OpsHub__ software on your computer to manage Snow Family devices
+ 
 
 # Data & Analytics
 
