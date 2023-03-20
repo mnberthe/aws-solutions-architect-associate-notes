@@ -5,7 +5,7 @@
 - [Lambda](#lambda)
 - [Elastic Beanstalk](#elastic-beanstalk)
 - [Elastic Container Registry](#ecr)
-- [Elastic Container Service](#ecs)
+- [Elastic Container Service](#elastic-container-service)
 - [Elastic Kubernates Service](#EKS)
 - [Fargate](#fargate)
 
@@ -55,7 +55,7 @@
 - [Snow Family](#snow-family)
 - [Database Migration Service](#database-migration-service)
 - [Application migration service](#application-migration-service)
-- [DataSync](#data-sync)
+- [DataSync](#datasync)
 - [AppSync](#app-sync)
 - [Transfer Family](#transfer-family)
 
@@ -305,6 +305,45 @@ __Hibernation__
   
   ![image](https://user-images.githubusercontent.com/35028407/226097784-f6f083bf-cdc1-4f85-b9e6-bc38c76b45d3.png)
 
+
+## Elastic Container Service
+
+- AWS managed container orchestration platform
+- Launch Docker containers on AWS = Launch __ECS Tasks__ on __ECS Clusters__
+- __EFS__ is used as persistent multi-AZ shared storage for ECS tasks
+
+__Launch Types__
+
+__EC2 Launch Type__
+- __Not Serverless__
+- __you must provision & maintain the infrastructure (the EC2 instances)__
+- EC2 instances have __ECS agent__ running on them as a __docker container__
+- AWS takes care of starting / stopping containers
+
+__Fargate Launch Type__
+- __Serverless__
+- You do not provision the infrastructure (no EC2 instances to manage)
+- You just create task definitions
+- AWS just runs ECS Tasks for you based on the CPU / RAM you need
+- To scale, just increase the number of tasks
+
+__IAM Roles for ECS__
+- __EC2 Instance Profile (EC2 Launch Type only):__
+  - Used by the ECS agent
+  - Makes API calls to ECS servic
+  - Pull Docker image from ECR
+  - Reference sensitive data in Secrets Manager or SSM Parameter Store
+- __ECS Task Role:__
+  - Allows ECS tasks to access AWS resources
+  - Each task can have a separate role
+  - Use different roles for the different ECS Services
+  - Task Role is defined in the task definition
+
+__Data Volumes (EFS)__
+- Mount EFS file systems onto ECS tasks
+- Works for both __EC2__ and __Fargate launch types__
+- Tasks running in any AZ will share the same data in the EFS file system
+- __Fargate + EFS = Serverless__
 
 # High availability and scalability 
 
@@ -755,19 +794,42 @@ __Storage Tiers__
 
 
 # FSX
+
+- Allows us to launch 3rd party high-performance file systems on AWS
+- Useful when we don’t want to use an AWS managed file system like S3
+- __Can be accessed from your on-premise infrastructure__
+
+
 __FSx for Windows__
 
 - A managed Windows Server that runs __Windows Server Message Block (SMB)__ -based file services.
 - __Designed for Windows__ and Windows applications.
+- Supports Multi-AZ (high availability)
 - __Supports__ AD users, access control lists, groups, and security policies, along with Distributed File System (DFS) namespaces and replication.
 
 __Amazon FSx for Lustre__
 
 - A fully managed file system that is optimized for compute-intensive workloads
-- High Performance Computing
+- High Performance Computing(HPC)
+- Scales up to 100s GB/s, millions of IOPS, sub-ms latencies
+- __Only works with Linux__
 - Machine Learning
 - Media Data Processing Workflows
 
+
+__FSx Deployment Options__
+
+- __Scratch File System__
+  - Temporary storage (cheaper)
+  - Data is not replicated (data lost if the file server fails)
+  - High burst (6x faster than persistent file system)
+  - Usage: short-term processing
+
+- __Persistent File System__
+  - Long-term storage (expensive)
+  - Data is replicated within same AZ
+  - Failed files are replaced within minutes
+  - Usage: long-term processing, sensitive data
 
 __How differ  EFS, FSx for Windows, or FSx for Lustre__
 - __EFS__: When you need distributed, highly resilient storage for Linux instances and Linux-based applications.
@@ -775,6 +837,59 @@ __How differ  EFS, FSx for Windows, or FSx for Lustre__
 - __Amazon FSx for Lustre__ When you need high-speed, high-capacity distributed storage.\
   This will be for applications that do high performance computing (HPC), financial modeling, etc.\
   Remember that FSx for Lustre can store data directly on S3
+ 
+# Storage Gateway
+ 
+- Bridge between __on-premises data__ and __cloud data__
+- Not suitable for __one-time sync__ of large amounts of data (use __DataSync__ instead)
+- Optimizes data transfer by sending only changed data
+- __Use cases__:
+  - disaster recovery
+  - backup & restore
+  - on-premises cache & low-latency files access
+  
+__Types of Storage Gateway__
+ 
+ __S3 File Gateway__
+ 
+ - Configured S3 buckets are accessible using the __NFS__ and __SMB__ protocol
+ - Most recently used data is __cached__ in the file gateway__
+ - Supports S3 Standard, S3 Standard IA, S3 One Zone A, S3 Intelligent Tiering
+ - __Transition to S3 Glacier using a Lifecycle Policy__
+ - Bucket access using __IAM roles__ for each File Gateway
+ - SMB Protocol has integration with Active Directory (AD) for user authentication
+ 
+ ![image](https://user-images.githubusercontent.com/35028407/226275837-ab8f87ea-0c8e-4752-b606-b6fc0ffb03c7.png)
+
+__FSx File Gateway__
+- Native access to Amazon FSx for Windows File Server
+- __Local cache for frequently accessed data__
+- Windows native compatibility (SMB, NTFS, Active Directory...)
+- Useful for group file shares and home directories
+
+![image](https://user-images.githubusercontent.com/35028407/226276631-75b1606a-70de-4b97-826c-5e2e343122f7.png)
+
+__Volume Gateway__
+
+- Block storage using iSCSI protocol backed by S3
+- Backed by __EBS snapshots__ which can help restore on-premises volumes
+- Two kinds of volumes:
+  - __Cached volumes__: low latency access to most recent data
+  - __Stored volumes__: entire dataset is on premise, scheduled backups to S3
+  
+  ![image](https://user-images.githubusercontent.com/35028407/226277537-507618d3-46af-4567-933a-aaa1981cba97.png)
+
+__Tape Gateway__
+- Used to backup on-premises data using tape-based process to S3 as Virtual Tapes
+- Uses iSCSI protocol
+
+![image](https://user-images.githubusercontent.com/35028407/226277866-1936282f-11f0-4551-8faa-58bc48abc9e8.png)
+
+__Storage Gateway - Hardware Appliance__
+
+- Storage Gateway requires on-premises virtualization. If you don’t have virtualization available, you can use a Storage Gateway - Hardware Appliance. It is a mini server that you need to install on-premises.
+- __Does not work with FSx File Gatway__
+
  
 # Aws Backup
  
@@ -1691,6 +1806,36 @@ __Data migration__
    - __Snowball cannot import to Glacier directly__ (transfer to S3, configure a lifecycle policy to transition the data into Glacier)
    - Need to install __OpsHub__ software on your computer to manage Snow Family devices
  
+## DataSync
+
+- Move large amount of data to and from 
+  - On-premises / other cloud to AWS (NFS, SMB, HDFS, S3 API…) – needs agent
+  - AWS to AWS (different storage services) – no agent needed
+  - Can synchronize to:
+    - Amazon S3 (any storage classes – including Glacier)
+    - Amazon EFS
+    - Amazon FSx (Windows, Lustre, NetApp, OpenZFS...)
+  -  Replication tasks can be scheduled hourly, daily, weekly
+  - __File permissions and metadata are preserved (NFS POSIX, SMB…)__
+  
+  
+  ![image](https://user-images.githubusercontent.com/35028407/226283193-8d5cd915-7248-4a8d-ad47-3ca555db377b.png)
+
+  
+ 
+## Transfer Family
+
+- AWS managed service to transfer files in and out of Simple Storage Service (S3) or EFS using FTP (instead of using proprietary methods)
+- Supported Protocols
+  - FTP (File Transfer Protocol) - unencrypted in flight
+  - FTPS (File Transfer Protocol over SSL) - encrypted in flight
+  - SFTP (Secure File Transfer Protocol) - encrypted in flight 
+  
+- Supports Multi AZ
+- Pay per provisioned endpoint per hour + fee per GB data transfers
+- Clients can either connect directly to the FTP endpoint or optionally through Route 53
+- Transfer Family will need permission(IAM roleà)- to read or put data into S3 or EFS
+
 
 # Data & Analytics
 
