@@ -290,6 +290,44 @@ __Hibernation__
 - The root EBS volume must be encrypted
 - __Instance RAM Size – must be less than 150 GB.__
 
+## Lambda
+
+- Virtual functions – no servers to manage!
+- Limited by time - __short executions__
+- Run __on-demand__
+- Scaling is __automated__
+- __Not good for running containerized applications__
+
+__Lambda Limits__
+- __Execution__
+  - Memory allocation: __128 MB – 10GB__
+  - Maximum execution time: __900 seconds (15 minutes)__
+  - Environment variables: __4KB__
+  - Disk capacity in function container (/tmp): 512 MB to 10GB 
+  - Concurrency executions: 1000 (can be increased)
+- __Deployment__
+  - Lambda function deployment size (compressed .zip): 50 MB  
+  - Size of uncompressed deployment (code + dependencies): 250 MB
+  - Size of environment variables: 4 KB
+
+__Lambda@Edge__
+- Deploy Lambda functions alongside your CloudFront CDN for computing at edge locations
+- Customize the CDN content using Lambda at the edge location (responsive)
+- No server management (Lambda is deployed globally)
+- Can be used to modify CloudFront requests & responses
+
+![image](https://user-images.githubusercontent.com/35028407/226636397-3fdc7d54-56ab-4082-b163-c0facba57cf3.png)
+
+__Networking__
+- By default, your Lambda function is launched outside your own VPC (in an AWS owned VPC)
+- __Therefore, it cannot access resources in your VPC (RDS, ElastiCache, internal ELB…)__
+- To enable your Lambda function to access resources inside your private VPC, 
+- You must define the VPC ID, the Subnets and the Security Groups
+- Lambda will create an ENI (Elastic Network Interface) in your subnets
+
+<img width="527" alt="Capture d’écran 2023-03-21 à 15 37 02" src="https://user-images.githubusercontent.com/35028407/226640425-234beb72-ef9b-479a-8667-e3b1f0f47bae.png">
+
+
 ## Elastic Beanstalk
 
 - Used to deploy applications on AWS infrastructure
@@ -390,6 +428,15 @@ __EC2 Launch Type – Auto Scaling EC2 Instances__
 - __Supports both EC2 and Fargate launch types__
 - Inside the __EKS cluster__, we have __EKS nodes (EC2 instances)__ and __EKS pods (tasks)__ within them. We can use a private or public load balancer to access these EKS pods.
 - EKS is an alternative to ECS
+- Node Types
+  - __Managed Node Groups__ 
+    - Creates and manages Nodes (EC2 instances) for you
+    - Nodes are part of an ASG managed by EKS
+  - __Self-Managed Nodes__ 
+    - Nodes created by you and registered to the EKS cluster and managed by an ASG
+    - You can use prebuilt AMI - Amazon EKS Optimized AMI
+  - __AWS Fargate__
+    - No maintenance required; no nodes managed 
 
 
 ![image](https://user-images.githubusercontent.com/35028407/226579427-81fcabdc-0dcd-4bdf-a982-e2b9bc33464b.png)
@@ -1539,6 +1586,33 @@ __Health Checks__
       - Route 53 health checkers are outside the VPC. They can’t access private endpoints (private VPC or on-premises resources).
       - Create a CloudWatch Metric and associate a CloudWatch Alarm to it, then create a Health Check that checks the Cloud watch alarm.  
 
+## API Gateway
+
+- Serverless REST APIs
+- Invoke Lambda functions using REST APIs (API gateway will proxy the request to lambda)
+- Supports WebSocket (stateful)
+- Cache API responses
+- Can be integrated with any HTTP endpoint in the backend or any AWS API
+-
+__Endpoint Types__
+ - __Edge-Optimized (default):__
+   - For global clients
+   - Requests are routed through the CloudFront edge locations (improves latency)
+   - The API Gateway lives in only one region but it is accessible efficiently through edge locations 
+ - __Regional__
+   - For clients within the same region
+   - Could manually combine with your own CloudFront distribution for global deployment (this way you will have more control over the caching strategies and the distribution)
+ - __Private__
+   - Can only be accessed within your VPC using an Interface VPC endpoint (ENI)
+   - Use resource policy to define access
+  
+__Security__
+- __User Authentication through__
+  - IAM Roles (useful for internal applications)
+  - Cognito (identity for external users – example mobile users) 
+  - Custom Authorizer( Using lambda function to validate the token being passed in the header and return an lAM policy to determine if the user should be allowed to access the resource )
+- __Custom Domain Name HTTPS security through__ integration with AWS Certificate Manager (ACM) 
+
 # Content delivery
 
 ## CloudFront
@@ -2036,7 +2110,7 @@ web server logs across hosts together.
 
 # Access Management
 
-### Identity Access Management
+## Identity Access Management
 
 - Groups are collections of users and have policies attached to them
 - User can belong to multiple groups
@@ -2068,3 +2142,19 @@ __Assume Role vs Resource-based Policy__
  - When you assume an IAM Role, you give up your original permissions and take the permissions assigned to the role
  - When using a resource based policy, the principal doesn’t have to give up their permissions
 
+## Cognito
+
+Amazon Cognito lets you add user sign-up, sign-in, and access control to your web and mobile apps quickly and easily. Amazon Cognito scales to millions of users and supports sign-in with social identity providers, such as Apple, Facebook, Google, and Amazon, and enterprise identity providers via SAML 2.0 and OpenID Connect.
+
+__Cognito User Pools (CUP)__
+- __Create a serverless database of user for your web & mobile apps__
+- Integrate with API Gateway & Application Load Balancer
+- Multi-factor authentication (MFA)
+- __Federated Identities:__ users from Facebook, Google, SAML…
+
+__Cognito Identity Pools (Federated Identity)__
+- Provide AWS credentials to users so they can access __AWS resources directly__
+- Integrate with Cognito User Pools as an identity provider
+- Example use case: provide temporary access to write to an S3 bucket after authenticating the user via FaceBook (using CUP identity federation)
+
+__Cognito vs IAM: “hundreds of users”, ”mobile users”, “authenticate with SAML”__
