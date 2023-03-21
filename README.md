@@ -40,15 +40,15 @@
 
 ### Data & Analytics
 - [Athena](#athena)
-- [Redshift](#)
-- [OpenSearch(ex ElasticSearch)](#openSearch)
+- [Redshift](#redshift)
+- [OpenSearch](#opensearch)
 - [EMR](#emr)
-- [QuickSight](#quickSight)
+- [QuickSight](#quicksight)
 - [Glue](#glue)
 - [Lake formation](#lake-formation)
 - [Kinesis Data analytics](#kinesis-data-analytics)
-- [MSK Managed Streaming for Apache Kafka](#msk)
-- [Big Data Ingestion Pipeline](#data-pipeline)
+- [MSK Managed Streaming for Apache Kafka](#msk-managed-streaming-for-apache-kafka)
+- [Big Data Ingestion Pipeline](#big-data-ingestion-pipeline)
 
 ###  Migration & Transfer
 - [Snow Family](#snow-family)
@@ -65,15 +65,15 @@
 - [Rekognito](#rekognito)
 - [Transcribe](#transcribe)
 - [Polly](#polly)
-- [Translate](#emr)
-- [Lex](#emr)
-- [Comprehend](#emr)
-- [Comprehend Medical](#emr)
-- [SageMaker](#emr)
-- [Forecast](#emr)
-- [Kendra](#emr)
-- [Personalize](#emr)
-- [Textract](#emr)
+- [Translate](#Translate)
+- [Lex](#Lex)
+- [Comprehend](#Comprehend)
+- [Comprehend Medical](#Comprehend-Medical)
+- [SageMaker](#SageMaker)
+- [Forecast](#Forecast)
+- [Kendra](#Kendra)
+- [Personalize](#Personalize)
+- [Textract](#Textract)
 
 ### Networking
 - [Route 53](#route-53)
@@ -106,7 +106,7 @@
 
 ### Cloud Security
 - [AWS Shield](#aws-shield)
-- [Web Application Firewall (WAF)](#waf)
+- [Web Application Firewall (WAF)](wWeb-application-firewall)
 - [Firewall Manager](#firewall-manager)
 - [GuardDuty](#guard-duty)
 - [Inspector](#inspector)
@@ -1964,8 +1964,175 @@ __Data migration__
 
 # Data & Analytics
 
-### Kinesis Data Analytics (KDA)
+## Athena
 
+- Serverless query service to analyze data stored in Amazon S3
+- Uses __SQL__ language to query the files
+- Built on Presto engine
+- Output stored in S3
+- Supports CSV, JSON, ORC, Avro, and Parquet file format
+- Commonly used with Amazon Quicksight for reporting/dashboards
+
+__Performance__
+ - Use __columnar data__ for cost-savings (less scan)
+ - __Compress data__ for smaller retrievals (bzip2, gzip, lz4, snappy, zlip, zstd…)
+ - Partition datasets in S3 for easy querying on virtual columns
+
+__Amazon Athena – Federated Query__
+- Allows you to run SQL queries across data stored in relational, non-relational, object, and custom data sources (AWS or on-premises)
+- Store the results back in Amazon S3
+
+# Redshift
+- AWS managed __data warehouse__ (10x better performance than other data warehouses)
+- Based on __PostgreSQL__
+- Used for __Online Analytical Processing (OLAP)__ and high performance querying
+- __Columnar storage__ of data with __massively parallel query execution__ in __SQL__
+- Faster querying than __Athena__ due to indexes
+- Need to provision instances as a part of the Redshift cluster (pay for the instances provisioned)
+- Integrated with Business Intelligence (BI) tools such as __QuickSight or Tableau__
+- Redshift Cluster can have __1 to 128 nodes (128TB per node)__
+  - __Leader Node__: query planning & result aggregation 
+  - __Compute Nodes__: execute queries & send the result to leader node
+
+- No multi-AZ support (all the nodes will be in the same AZ)
+
+__Loading data into Redshift__
+
+- __S3__
+  - Use __COPY command__ to load data from an S3 bucket into Redshift 
+  - __Without Enhanced VPC Routing__
+    - data goes through the public internet
+  - __Enhanced VPC Routing__
+    - data goes through the VPC without traversing the public internet
+- __Kinesis Data Firehose__
+  - Sends data to __S3__ and issues a __COPY command__ to load it into Redshift   
+- __EC2 Instance__
+  - Using __JDBC driver__
+  - Used when an application needs to write data to Redshift
+  - Optimal to write data in batches 
+
+__Snapshots & DR__
+- Snapshots are point-in-time backups of a cluster, stored internally in S3
+- Snapshots are incremental (only what has changed is saved)
+- You can restore a snapshot into a __new cluster__
+- __Automated__
+  - every 8 hours, every 5 GB, or on a schedule
+  - Set retention between 1 to 35 days
+- __Manual__
+  - snapshot is retained until you delete it  
+
+- __Feature to automatically copy snapshots into another region__
+
+__Redshift Spectrum__
+- Query data present in S3 without loading it into Redshift
+- Need to have a Redshift cluster to use this feature
+- Query is executed by 1000s of Redshift Spectrum nodes
+- Consumes much less of your cluster's processing capacity than other queries
+
+## OpenSearch
+
+- Amazon OpenSearch is successor to __Amazon ElasticSearch__
+- Used in combination with a database to perform __search operations on the database__
+- Can search on any field, even supports __partial matches__
+- Need to provision a cluster of instances (pay for provisioned instances)
+- Supports Multi-AZ
+- Used in Big Data
+- Security through Cognito & IAM, KMS encryption, TLS
+- Comes with __Kibana__ (visualization) & __Logstash__ (log ingestion)
+
+## EMR
+
+- EMR stands for “Elastic MapReduce”
+- EMR helps creating __Hadoop clusters (Big Data)__ to analyze and process vast amount of data  
+- The clusters can be made of __hundreds of EC2 instances__
+- EMR comes bundled with __Apache Spark, HBase, Presto, Flink…__
+- EMR takes care of all the __provisioning and configuration__
+- __Auto-scaling__
+- Integrated with __Spot Instances__
+
+## QuickSight
+
+- __Serverless machine learning-powered business intelligence service to create interactive dashboards__
+- Fast, automatically scalable, embeddable
+- Use cases:
+  - Business analytics
+  - Building visualizations
+  - Get business insights using data
+- Integrated with :
+  - RDS
+  - Aurora
+  - Athena
+  - Redshift
+  - S3
+
+# Glue
+
+- Managed __extract, transform, and load (ETL)__ service
+- Useful to prepare and transform data for __analytics__
+- Fully __serverless__ service 
+
+![image](https://user-images.githubusercontent.com/35028407/226724824-88501505-8756-4bc0-b00a-6fa512a75b61.png)
+
+- Used to get data from a store, process and put it in another store (could be the same store)
+- __Glue Job Bookmarks__: prevent re-processing old data
+- __Glue Data Crawlers__ crawl databases and collect metadata which is populated in Glue Data Catalog
+- Data lake is stored into S3
+
+# Lake Formation 
+
+- __Data lake = central place to have all your data for analytics purpose__
+- Fully managed service that makes it easy to setup a __data lake__ in days
+- Out-of-the-box source __blueprints__: S3, RDS, Relational & NoSQL DB…
+- __Fine-grained Access Control for your applications (row and column-level)__
+
+
+## Kinesis Data analytics
+
+__Kinesis Data Analytics (SQL application)__
+- Real-time analytics on __Kinesis Data Streams__ & __Firehose__ using SQL
+- Add reference data from Amazon S3 to enrich streaming data
+- Fully managed, no servers to provision
+- Automatic scaling
+- __Output__
+  - Kinesis Data Streams: create streams out of the real-time analytics queries 
+  - Kinesis Data Firehose: send analytics query results to destinations
+- __Use cases:__
+  - Time-series analytics
+  - Real-time dashboards  
+  - Real-time metrics
+
+![image](https://user-images.githubusercontent.com/35028407/226729226-bad6dbde-3ed8-42b3-af2a-af867ffdd6f0.png)
+
+__Kinesis Data Analytics for Apache Flink__
+- Use Flink (Java, Scala or SQL) to process and analyze streaming data
+- Use any Apache Flink programming features
+- Flink does not read from Firehose (use Kinesis Analytics for SQL instead)
+- SOurce :
+  - Kinesis Data Streams 
+  - Amazon MSK
+
+
+# MSK Managed Streaming for Apache Kafka
+
+- Alternative to Amazon Kinesis both allow to stream data
+- Fully managed Apache Kafka on AWS
+  - Allow you to create, update, delete clusters
+  - MSK creates & manages Kafka brokers nodes & Zookeeper nodes for you
+  - Deploy the MSK cluster in your VPC, multi-AZ (up to 3 for HA)
+  - Data is stored on EBS volumes for as long as you want 
+
+__MSK Serverless__
+
+- Run Apache Kafka on MSK without managing the capacity
+- MSK automatically provisions resources and scales compute & storage
+
+# Big Data Ingestion Pipeline
+- We want the ingestion pipeline to be fully serverless
+- We want to collect data in real time
+- We want to transform the data
+- We want to query the transformed data using SQL
+- The reports created using the queries should be in S3
+- We want to load that data into a warehouse and create dashboards
 
 # Monitoring & Audit
 
@@ -2154,6 +2321,7 @@ __Cognito User Pools (CUP)__
 
 __Cognito Identity Pools (Federated Identity)__
 - Provide AWS credentials to users so they can access __AWS resources directly__
+- Provides temporary credentials (using STS) to users so they can access AWS resources
 - Integrate with Cognito User Pools as an identity provider
 - Example use case: provide temporary access to write to an S3 bucket after authenticating the user via FaceBook (using CUP identity federation)
 
