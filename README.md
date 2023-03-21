@@ -4,10 +4,9 @@
 - [EC2](#ec2)
 - [Lambda](#lambda)
 - [Elastic Beanstalk](#elastic-beanstalk)
-- [Elastic Container Registry](#ecr)
 - [Elastic Container Service](#elastic-container-service)
-- [Elastic Kubernates Service](#EKS)
-- [Fargate](#fargate)
+- [Elastic Container Registry](#elastic-container-registry)
+- [Elastic Kubernates Service](#elastic-kubernates-service)
 
 ### High availability and scalability 
  - [Eastic Load Balancer](#elastic-load-balancer)
@@ -344,6 +343,58 @@ __Data Volumes (EFS)__
 - Works for both __EC2__ and __Fargate launch types__
 - Tasks running in any AZ will share the same data in the EFS file system
 - __Fargate + EFS = Serverless__
+
+
+__ECS Service Auto Scaling__
+- Automatically increase/decrease the desired number of ECS tasks
+- Amazon ECS Auto Scaling type:
+- Amazon ECS Auto Scaling uses __AWS Application Auto Scaling__
+  - Metric :
+    - ECS Service Average CPU Utilization
+    - ECS Service Average Memory Utilization - Scale on RAM
+    - ALB Request Count Per Target – metric coming from the ALB  
+- __Scaling type:__
+  - __Target Tracking__ – scale based on target value for a specific CloudWatch metric 
+  - __Step Scaling__ – scale based on a specified CloudWatch Alarm
+  - __Scheduled Scaling__ – scale based on a specified date/time (predictable changes)
+
+- ECS Service Auto Scaling (task level) ≠ EC2 Auto Scaling (EC2 instance level)
+- __Fargate Auto Scaling__ is much easier to setup (__because Serverless__)
+
+__EC2 Launch Type – Auto Scaling EC2 Instances__
+
+- Accommodate ECS Service Scaling by adding underlying EC2 Instances
+- 2 type:
+  -  __Auto Scaling Group__ Scaling 
+    - Scale your ASG based on CPU Utilization
+    - Add EC2 instances over time
+  - __ECS Cluster Capacity Provider__
+    - Used to automatically provision and scale the infrastructure for your ECS Tasks
+    - Capacity Provider paired with an Auto Scaling Group
+    - Add EC2 Instances when you’re missing capacity (CPU, RAM…)  
+
+
+<img width="1171" alt="Capture d’écran 2023-03-21 à 10 37 51" src="https://user-images.githubusercontent.com/35028407/226567639-87fab409-5068-4460-89d3-b277b4fa924d.png">
+
+
+## Elastic Container Registry
+
+- Store and manage Docker images on AWS
+- Private and Public repository (Amazon ECR Public Gallery)
+- Fully integrated with ECS, backed by Amazon S3
+- Access is controlled through IAM policy
+
+## Elastic Kubernates Service
+
+- Used to launch __Kubernetes (open-source) clusters__ on AWS
+- __Supports both EC2 and Fargate launch types__
+- Inside the __EKS cluster__, we have __EKS nodes (EC2 instances)__ and __EKS pods (tasks)__ within them. We can use a private or public load balancer to access these EKS pods.
+- EKS is an alternative to ECS
+
+
+![image](https://user-images.githubusercontent.com/35028407/226579427-81fcabdc-0dcd-4bdf-a982-e2b9bc33464b.png)
+
+
 
 # High availability and scalability 
 
