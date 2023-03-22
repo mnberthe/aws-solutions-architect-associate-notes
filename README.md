@@ -98,11 +98,11 @@
 
 ### Access Management 
 - [Identity Access Management](#identity-access-management)
-- [Cognito](#cognito)
-- [Security Token Service (STS)](#sts)
-- [Identity Federation in AWS](#identity-feration-in-aws)
 - [AWS Organizations](#aws-organizations)
 - [SSO](#sso)
+- [Cognito](#cognito)
+- [AWS Directory Services](#aws-directory-services)
+
 
 ### Cloud Security
 - [AWS Shield](#aws-shield)
@@ -2449,6 +2449,49 @@ __Reporting Tools__
 __Assume Role vs Resource-based Policy__
  - When you assume an IAM Role, you give up your original permissions and take the permissions assigned to the role
  - When using a resource based policy, the principal doesn’t have to give up their permissions
+ - Kinesis data stream use IAM role 
+ - SNS, SQS, Lambda, CloudWatch log, API Gateway ... are Ressource based policy
+
+__Permission Boundaries__
+- Set the maximum permissions an IAM entity can get
+- __Can be applied to users and roles (not groups)__
+- Used to ensure some users can’t escalate their privileges (make themselves admin)
+
+## AWS Organizations
+
+- __Global service__
+- Manage multiple AWS accounts under an organization
+  - The main account is the management account
+  - Other accounts are member accounts  
+- An AWS account can only be part of one organization
+- __Consolidated Billing__ across all accounts (lower cost)
+- Pricing benefits from aggregated usage of AWS resources
+- API to automate AWS account creation (on demand account creation)
+- Establish Cross Account Roles for Admin purposes where the master account can assume an admin role in any of the children accounts
+
+__Organizational Units (OU)__
+- Folders for grouping AWS accounts of an organization
+- Can be nested
+
+![image](https://user-images.githubusercontent.com/35028407/227026387-6dc7c349-2c0c-4410-876e-614b8c504a94.png)
+
+__Service Control Policies (SCP)__
+- IAM policies applied to OU or Accounts to restrict Users and Roles
+- They do not apply to the management account (full admin power)
+- Must have an explicit allow (does not allow anything by default – like IAM)
+- __Explicit Deny__ has the highest precedence
+
+## SSO 
+
+- For __Single Sign-On__ called now __IAM Identity Center__
+- One login (single sign-on) for all your
+  - __AWS accounts in AWS Organizations__
+  - Business cloud applications (e.g., Salesforce, Box, Microsoft 365, …)
+  - SAML2.0-enabled applications 
+  
+- Identity providers
+  - Built-in identity store in IAM Identity Center
+  - 3rd party: Active Directory (AD), OneLogin, Okta
 
 ## Cognito
 
@@ -2468,5 +2511,16 @@ __Cognito Identity Pools (Federated Identity)__
 
 __Cognito vs IAM: “hundreds of users”, ”mobile users”, “authenticate with SAML”__
 
+# AWS Directory Services
+- __AWS Managed Microsoft AD__
+- Create your own AD in AWS, manage users locally, supports MFA
+- Establish “trust” connections with your __on- premises AD__
 
-## AWS Organizations
+
+__AD Connector__
+- Directory Gateway (proxy) to redirect to on- premises AD, supports MFA
+- Users are managed on the on-premises AD
+
+__Simple AD__
+- AD-compatible managed directory on AWS
+- Cannot be joined with on-premises AD
