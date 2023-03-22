@@ -61,19 +61,19 @@
 ### Disaster Recovery 
 - [Disaster Recovery](#disaster)
 
-### Machine Leanrning
-- [Rekognito](#rekognito)
+### Machine Learning
+- [Rekognition](#rekognition)
 - [Transcribe](#transcribe)
 - [Polly](#polly)
-- [Translate](#Translate)
-- [Lex](#Lex)
-- [Comprehend](#Comprehend)
-- [Comprehend Medical](#Comprehend-Medical)
-- [SageMaker](#SageMaker)
-- [Forecast](#Forecast)
-- [Kendra](#Kendra)
-- [Personalize](#Personalize)
-- [Textract](#Textract)
+- [Translate](#translate)
+- [Lex](#lex)
+- [Comprehend](#comprehend)
+- [Comprehend Medical](#comprehend-medical)
+- [SageMaker](#sagemaker)
+- [Forecast](#forecast)
+- [Kendra](#kendra)
+- [Personalize](#personalize)
+- [Textract](#textract)
 
 ### Networking
 - [Route 53](#route-53)
@@ -1960,6 +1960,86 @@ __Data migration__
 - Pay per provisioned endpoint per hour + fee per GB data transfers
 - Clients can either connect directly to the FTP endpoint or optionally through Route 53
 - Transfer Family will need permission(IAM roleà)- to read or put data into S3 or EFS
+
+# Machine Learning
+
+## Rekognition
+
+- Find __objects, people, text, scenes__ in __images and videos__ using ML
+- __Facial analysis__ and __facial search__ to do user verification, people counting:
+- Use cases
+  - Content Moderation
+  - Text Detection 
+  - Face Detection and Analysis (gender, age range, emotions…)
+  - Face Search and Verification
+  - Celebrity Recognition
+  - Detect content that is inappropriate, unwanted, or offensive (image and videos)
+  - Used in social media, broadcast media, advertising, and e-commerce situations to create a safer user experience
+
+# Transcribe
+
+- Automatically __convert speech to text__
+- Automatically remove __Personally Identifiable Information (PII)__ using Redaction
+- Use cases: 
+  - transcribe customer service calls
+  - automate closed captioning and subtitling
+
+# Polly
+
+- Turn __text__ into __lifelike speech__ using deep learning
+- Allowing you to create applications that talk
+
+# Translate
+
+- Natural and accurate __language translation__
+
+# Lex
+- __Amazon Lex__
+  - same technology that powers Alexa
+  - Automatic Speech Recognition (ASR) to convert speech to text
+  - __Natural Language Understanding to recognize the intent of text, callers__
+  - Helps build chatbots, call center bots
+- __Amazon Connect__
+  - Receive calls, create contact flows, cloud-based __virtual contact center__
+  - Can integrate with other CRM systems or AWS  
+
+# Comprehend
+- For __Natural Language Processing – NLP__
+- Fully managed and serverless service
+- Uses machine learning to find insights and relationships in text
+
+
+# Comprehend Medical
+
+- Amazon Comprehend Medical detects and returns useful information in unstructured __clinical text__
+- Uses __NLP__ to detect __Protected Health Information__ (PHI)
+
+
+# SageMaker
+- Fully managed service for __developers / data scientists__ to build __ML models__
+- Typically, difficult to do all the processes in one place + provision servers
+- Machine learning process (simplified): predicting your exam score
+
+# Forecast
+
+- Fully managed service that uses ML to deliver __highly accurate forecasts__
+- Example: predict the future sales of a raincoat
+- Use cases: Product Demand Planning, Financial Planning, Resource Planning
+
+# Kendra
+- Fully managed __document search__ service powered by Machine Learning
+- Extract answers from within a __document (text, pdf, HTML, PowerPoint, MS Word, FAQs…)__
+
+# Personalize
+
+- Fully managed __ML-service__ to build apps with real-time personalized __recommendations__
+- Same technology used by Amazon.com
+- Integrates into existing websites, applications, SMS, email marketing systems, …
+
+# Textract
+
+- Automatically __extracts text__, handwriting, and data from any scanned documents using AI and ML
+- Read and process any type of document (PDFs, images, …)
 
 
 # Data & Analytics
