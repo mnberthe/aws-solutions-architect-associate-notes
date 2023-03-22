@@ -101,7 +101,7 @@
 - [Cognito](#cognito)
 - [Security Token Service (STS)](#sts)
 - [Identity Federation in AWS](#identity-feration-in-aws)
-- [AWS Organizations](#aws-organisation)
+- [AWS Organizations](#aws-organizations)
 - [SSO](#sso)
 
 ### Cloud Security
@@ -1875,8 +1875,8 @@ IoT telemetry data…
 
 
 ### Event Bridge
-- Schedule or Cron to create events on a schedule
-- Event Pattern: Event rules to react to a service doing something
+- __Schedule or Cron__ to create events on a schedule
+- __Event Pattern__: Event rules to react to a service doing something
 - Trigger Lambda functions, send SQS/SNS messages
 
 # Migration & Transfer
@@ -2234,7 +2234,8 @@ Serverless performance monitoring service
     - These metrics will need to be provided by using the CloudWatch agent installed on the host. 
 
  __EC2 Monitoring__
- - Must run a __CloudWatch agent__ on instance to push system metrics and logs to CloudWatch.Instance role (IAM) must allow the instance to push logs to CloudWatch
+ - Must run a __CloudWatch agent__ on instance to push system metrics and logs to CloudWatch.
+ - Instance role (IAM) must allow the instance to push logs to CloudWatch
  - EC2 instances have metrics every 5 minutes
  - With detailed monitoring (for a cost), you get metrics every 1 minute
  - Use detailed monitoring if you want to react faster to changes (eg. scale faster for your ASG)
@@ -2247,7 +2248,23 @@ Serverless performance monitoring service
     - Memory utilization (memory usage)
     - Disk swap utilization
     - Disk space utilization    
+ 
+ __CloudWatch Logs Agent__
+ - Old version of the agent
+ - Can only send to CloudWatch Logs
 
+__Can only send to CloudWatch Logs__
+ - Collect additional system-level metrics such as RAM, processes, etc… 
+ - Collect logs to send to CloudWatch Logs
+ - Centralized configuration using SSM Parameter Store
+ - Collected directly on your Linux server / EC2 instance
+    - CPU (active, guest, idle, system, user, steal)
+    - Disk metrics (free, used, total), Disk IO (writes, reads, bytes, iops)
+    - RAM (free, inactive, used, total, cached)
+    - Netstat (number of TCP and UDP connections, net packets, bytes)
+    - Processes (total, dead, bloqued, idle, running, sleep)
+    - Swap Space (free, used, used %)
+    
  __Logs__
  
  - Used to store application logs
@@ -2257,14 +2274,27 @@ continuous set of logs from a single instance
  - __Log Group__ This is a collection of log streams. For example, you’d group all your Apache
 web server logs across hosts together.
  
+ - __Logs can be sent to__:
+   - S3 buckets (exports)
+   - Kinesis Data Streams
+   - Kinesis Data Firehose
+   - Lambda functions
+   - ElasticSearch
+ 
  __Metric Filters__ can be used to filter expressions and use the count to trigger CloudWatch alarms. They apply only on the incoming metrics after the metric filter was created. Example filters:
    - find a specific IP in the logs
    - count occurrences of “ERROR” in the logs
    
  __Cloud Watch Logs Insights__ can be used to query(Sql) logs and add queries to CloudWatch Dashboards 
  
- __Subscription Filter__ To stream logs in real-time, apply a Subscription Filter on logs
- 
+ __Subscription Filter__ 
+  - To stream logs in real-time, apply a Subscription Filter on logs
+  - Logs can take up to 12 hours to become available for exporting to S3 (not real-time)
+  -  To store logs in real time in S3, use a subscription filter to publish logs to KDF in real time which will then write the logs to S3.
+  - Logs from multiple accounts and regions can be aggregated using subscription filters
+  
+  ![image](https://user-images.githubusercontent.com/35028407/226958132-e901025b-f7bd-4b51-85a2-a5ee49cc1916.png)
+
  
  __Alarms__
  
@@ -2277,6 +2307,19 @@ web server logs across hosts together.
   - Send notification to SNS
  
 
+__CloudWatch Insights and Operational Visibility__
+
+- __CloudWatch Container Insights__
+  - Collect, aggregate, summarize metrics and logs from containers
+  - __In Amazon EKS and Kubernetes, CloudWatch Insights is using a containerized version of the CloudWatch Agent to discover containers__
+- __CloudWatch Lambda Insights__
+  - Monitoring and troubleshooting solution for serverless applications running on AWS Lambda
+  - Collects, aggregates, and summarizes system level metrics including CPU time, memory, disk, and network
+- __CloudWatch Contributors Insights__
+  - Find “Top-N” Contributors through CloudWatch Logs
+- __CloudWatch Application Insights__
+  - Automatic dashboard to troubleshoot your application and related AWS services
+
 # CloudTrail
 
  - Provides governance, compliance and audit for your AWS Account
@@ -2286,6 +2329,7 @@ web server logs across hosts together.
  - __A trail can be applied to All Regions (default) or a single Region__
  - If a resource is deleted in AWS, investigate CloudTrail first
  - __Event retention: 90 days__
+ - To keep events beyond this period, log them to S3 and use Athena
  
  __CloudTrail Events__
  
@@ -2304,7 +2348,7 @@ web server logs across hosts together.
        - AWS Lambda function execution activity (the Invoke API)
        
    - __CloudTrail Insights Events__
-     - Enable CloudTrail Insights to detect unusual activity in your account
+     - Enable CloudTrail Insights to __detect unusual activity__ in your account
        - inaccurate resource provisioning 
        - hitting service limits
        - Bursts of AWS IAM actions
@@ -2315,7 +2359,7 @@ web server logs across hosts together.
         - can trigger an EventBridge event for automation
 
 # Config
-- Helps with auditing and recording compliance of your AWS resources
+- Helps with auditing and recording __compliance__ of your AWS resources
 - Record configurations changes over time
 - __Evaluate compliance of resources using config rules__
 - Does not prevent non-compliant actions from happening (no deny)
@@ -2326,10 +2370,27 @@ web server logs across hosts together.
 - You can receive alerts (SNS notifications) for any changes
 
 - __Remediation__
-  - utomate remediation of non-compliant resources using __SSM Automation Documents__
+  - automate remediation of non-compliant resources using __SSM Automation Documents__
     - AWS-Managed Automation Documents
     - Custom Automation Documents to invoke a Lambda function for automation 
   - You can set Remediation Retries if the resource is still non-compliant after auto remediation 
+
+__CloudWatch vs CloudTrail vs Config__
+
+- __CloudWatch__
+  - Performance monitoring (metrics, CPU, network, etc…) & dashboards
+  - Events & Alerting
+  - Log Aggregation & Analysis
+  
+- __CloudTrail__
+  - Record API calls made within your Account by everyone
+  - Can define trails for specific resources 
+  - Global Service
+  
+- __Config__
+  - Record configuration changes
+  - Evaluate resources against compliance rules
+  - Get timeline of changes and compliance
 
 # Trusted Advisor
 - Analyze your AWS accounts and provides recommendation:
@@ -2406,3 +2467,6 @@ __Cognito Identity Pools (Federated Identity)__
 - Example use case: provide temporary access to write to an S3 bucket after authenticating the user via FaceBook (using CUP identity federation)
 
 __Cognito vs IAM: “hundreds of users”, ”mobile users”, “authenticate with SAML”__
+
+
+## AWS Organizations
