@@ -2541,13 +2541,13 @@ __Simple AD__
 - Audit key usage with __CloudTrail__(to know who made call to KMS API)
 - Need to set __IAM Policy & Key Policy__ to allow a user or role to access a KM
 
-__KMS Keys __
+__KMS Keys__
 - __KMS Keys is the new name of KMS Customer Master Key__
 - __Symmetric (AES-256 keys)__
   - Single encryption key that is used to Encrypt and Decrypt
   - AWS services that are integrated with KMS use Symmetric CMKs 
   - You never get access to the KMS Key unencrypted (must call KMS API to use)
-- __Asymmetric (RSA & ECC key pairs)
+- __Asymmetric (RSA & ECC key pairs)__
   - Public (Encrypt) and Private Key (Decrypt) pair
   - Used for Encrypt/Decrypt, or Sign/Verify operations  
   - The public key is downloadable, but you can’t access the Private Key unencrypted
