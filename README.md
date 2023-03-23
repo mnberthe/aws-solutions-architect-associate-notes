@@ -103,10 +103,10 @@
 - [Certificate Manager](#certificate-manager)
 
 ### Cloud Security
+- [Web Application Firewall](web-application-firewall)
 - [AWS Shield](#aws-shield)
-- [Web Application Firewall (WAF)](wWeb-application-firewall)
 - [Firewall Manager](#firewall-manager)
-- [GuardDuty](#guard-duty)
+- [GuardDuty](#guardduty)
 - [Inspector](#inspector)
 - [Macie](#macie)
 
@@ -1665,6 +1665,9 @@ __Pricing__
   - Global Accelerator performs health checks for the application
   - __Failover in less than 1 minute__ for unhealthy endpoints 
 
+- __Good for:__
+  - HTTP use cases that require static IP addresses or fast regional failover
+
 # Decoupling applications
 
 - Synchronous between applications can be problematic if there are sudden spikes of traffic
@@ -2629,7 +2632,7 @@ __Parameter Policies__
   - Parameter change notification
 
 
-# Secrets Manager
+## Secrets Manager
 - Newer service, meant for storing secrets
 - Capability to force __rotation of secrets__ every X days(not available in __Parameter Store__)
 - Automate generation of secrets on rotation (uses Lambda)
@@ -2645,7 +2648,7 @@ __Secrets Manager – Multi-Region Secrets__
 - __Use cases__: multi-region apps, disaster recovery strategies, multi-region DB
 
 
-# Certificate Manager
+## Certificate Manager
 - Easily provision, manage, and deploy TLS Certificates
 - Used to provide in-flight encryption for websites (HTTPS)
 - Supports both public and private TLS certificates
@@ -2656,3 +2659,94 @@ __Secrets Manager – Multi-Region Secrets__
   - CloudFront Distributions
   - APIs on API Gateway 
   - Cannot use ACM with EC2 
+
+
+# Cloud Security
+
+## Web Application Firewall
+
+- Protects your application from common __layer 7 web exploits__ such as __SQL Injection__ and __Cross-Site Scripting (XSS)__
+- __Layer 7 is HTTP__ (vs Layer 4 is TCP/UDP)
+- Can only be deployed on
+  - __Application Load Balancer__
+  - __API Gateway__
+  - __CloudFront__
+  - __AppSync GraphQL API__ 
+  - __Cognito User Pool__
+ - WAF contains __Web ACL(Access Control List)__ containing rules to __filter requests__ based on: 
+   - __IP addresses__
+   - HTTP headers
+   - HTTP body
+   - URI strings
+   - Size constraints (ex. max 5kb)
+   - __Geo-match__ (block countries)
+   - __Rate-based__ rules (to count occurrences of events per IP) for __DDoS protection__
+ - __Web ACL are Regional except for CloudFront__
+
+## AWS Shield
+
+- __DDoS__: Distributed Denial of Service – many requests at the same time
+- __AWS Shield Standard__
+  - Free service that is activated for every AWS customer
+  - Provides protection from attacks such a
+    - __SYN/UDP Floods__
+    - __Reflection attacks__
+    - and other layer 3/layer 4 attacks  
+ - __AWS Shield Advanced__
+ - __DDoS mitigation service__ ($3,000 per month per organization)
+  - Protect against more sophisticated attack on
+    - EC2 instances
+    - Elastic Load Balancing (ELB)
+    - CloudFront
+    - Global Accelerator
+    - Route 53
+   - 24/7 access to AWS __DDoS Response (DRP)__ team   
+
+
+## Firewall Manager
+
+- __Manage all the firewall rules in all accounts of an AWS Organization__
+- Security policy: common set of __security rules__
+  - WAF rules (Application Load Balancer, API Gateways, CloudFront)
+  - AWS Shield Advanced (ALB, CLB, NLB, Elastic IP, CloudFront)
+  - Security Groups for EC2, Application Load BAlancer and ENI resources in VPC
+  - AWS Network Firewall (VPC Level)
+  - Amazon Route 53 Resolver DNS Firewall
+  - Policies are created at the region level
+
+## GuardDuty
+
+- Intelligent __Threat discovery__ to protect your AWS Account 
+- Uses __Machine Learning algorithms__, anomaly detection, 3rd party data
+- No management required (just enable)
+- Input data includes:
+  - CloudTrail Logs (unusual API calls, unauthorized deployments)
+  - VPC Flow Logs (unusual internal traffic, unusual IP address)
+  - DNS Logs (compromised EC2 instances sending encoded data within DNS queries)
+  - EKS Audit Logs (suspicious activities and potential EKS cluster compromises)
+- Can setup EventBridge rules to be notified in case of findings
+- EventBridge rules can target AWS Lambda or SNS
+- __Can protect against CryptoCurrency attacks (has a dedicated “finding” for it)__
+
+![image](https://user-images.githubusercontent.com/35028407/227137981-b3bdb45b-3b18-441b-8b9d-9a8bd9731d47.png)
+
+
+## Inspector
+
+- Automated Security Assessments 
+- For :
+  - __EC2 instances__ using __System Manager (SSM) Agent__ running on EC2 instances 
+  - __Amazon ECR__ - Assessment of containers as they are pushed to __ECR__
+  - __Lambda Functions__ Identifies software vulnerabilities in function code and package dependencies
+
+- Integration with __AWS Security Hub__
+- Send findings to Amazon __Event Bridge__
+- Gives a risk score associated with all vulnerabilities for prioritization
+
+
+## Macie
+
+- Amazon Macie is a fully managed __data security and data privacy service__
+that uses __machine learning and pattern matching to discover and protect your sensitive data__ in AWS(ex in an S3 bucket).
+- Macie helps identify and alert you to sensitive data, such as __personally identifiable information (PII)__
+- Notifies through an __EventBridge event__
