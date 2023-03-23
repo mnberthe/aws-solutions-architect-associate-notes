@@ -1269,6 +1269,10 @@ __DynamoDB Global Tables__
   - 10.0.0.0 – 10.255.255.255 (10.0.0.0/8) 
   - 172.16.0.0 – 172.31.255.255 (172.16.0.0/12)
   - 192.168.0.0 – 192.168.255.255 (192.168.0.0/16)
+- Max. CIDR per VPC is 5, for each CIDR
+  - __Min. size is /28 (16 IP addresses)__
+  - __Max. size is /16 (65536 IP addresses)__
+
   
 __VPC – Subnet__
 -  AWS reserves __5 IP addresses (first 4 & last 1)__ in each subnet
@@ -1279,6 +1283,16 @@ __Internet Gateway (IGW)__
 - One VPC can only be attached to one IGW and vice versa
 - Internet Gateways on their own do not allow Internet access
 - Route tables must also be edited!
+
+__Bastion Hosts__
+- A EC2 instance running in the public subnet (accessible from public internet), to allow users to SSH into the instances in the private subnet.
+- __Bastion Host security group__ must allow inbound from the __internet on port 22 from restricted CIDR__, for example the public
+CIDR of your corporation
+- __Security Group of the EC2 Instance__ must allow the Security Group of the Bastion Host, or the private IP of the Bastion host
+
+![image](https://user-images.githubusercontent.com/35028407/227360848-ca36d049-0dd5-4586-936a-8eec9cb083f5.png)
+
+
 
 __NAT Instance__
 
@@ -1311,13 +1325,13 @@ __NAT Gateway__
 
 ![image](https://user-images.githubusercontent.com/35028407/224571995-c755c35d-87e3-49da-b223-021da7d53d53.png)
 
-_ __Architecture__
+__Architecture__
 
 ![image](https://user-images.githubusercontent.com/35028407/224572054-495518a9-d85e-404a-9b66-2ade283a5c77.png)
 
 __NAT Gateway with High Availability__
 
-__NAT Gateway is resilient within a single Availability Zone__
+- __NAT Gateway is resilient within a single Availability Zone__
 - Must create __multiple NAT Gateways__ in __multiple AZs__ for fault-tolerance
 - No cross-AZ failover needed because if an AZ goes down, all of the instances in that AZ also go down.
 
