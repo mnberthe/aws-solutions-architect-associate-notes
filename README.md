@@ -88,14 +88,6 @@
 - [CloudFront](#cloudfront)
 - [Global Accelerator](#global-accelerator)
 
-### Parameters & Encryption
-- [Key Management Service (KMS)](#kms)
-- [SSM Parameter Store](#ssm)
-- [Secrets Manager](#secret)
-- [CloudHSM](#cloudHsm)
-- [OpsWorks](#opsworks)
-
-
 ### Access Management 
 - [Identity Access Management](#identity-access-management)
 - [AWS Organizations](#aws-organizations)
@@ -103,6 +95,12 @@
 - [Cognito](#cognito)
 - [AWS Directory Services](#aws-directory-services)
 
+
+### Parameters & Encryption
+- [Key Management Service](#key-management-service)
+- [SSM Parameter Store](#ssm-parameter-store)
+- [Secrets Manager](#secrets-manager)
+- [Certificate Manager](#certificate-manager)
 
 ### Cloud Security
 - [AWS Shield](#aws-shield)
@@ -2416,6 +2414,7 @@ __CloudWatch vs CloudTrail vs Config__
 - Analyze your data at a high level: total costs and usage across all accounts
 - __Forecast usage up to 12 months based on previous usage__
 
+
 # Access Management
 
 ## Identity Access Management
@@ -2524,3 +2523,136 @@ __AD Connector__
 __Simple AD__
 - AD-compatible managed directory on AWS
 - Cannot be joined with on-premises AD
+
+# Parameters & Encryption
+
+## Key Management Service
+
+- Anytime you hear “encryption” for an AWS service, it’s most likely KMS
+- __Regional service (keys are bound to a region)__
+- AWS manages encryption keys for us
+- Provides encryption and decryption of data and manages keys required for it
+- Encrypted secrets can be stored in the code or environment variables
+- __Encrypt up to 4KB of data per call (if data > 4 KB, use envelope encryption)__
+- Integrated with lAM for authorization
+- Audit key usage with __CloudTrail__(to know who made call to KMS API)
+- Need to set __IAM Policy & Key Policy__ to allow a user or role to access a KM
+
+__KMS Keys __
+- __KMS Keys is the new name of KMS Customer Master Key__
+- __Symmetric (AES-256 keys)__
+  - Single encryption key that is used to Encrypt and Decrypt
+  - AWS services that are integrated with KMS use Symmetric CMKs 
+  - You never get access to the KMS Key unencrypted (must call KMS API to use)
+- __Asymmetric (RSA & ECC key pairs)
+  - Public (Encrypt) and Private Key (Decrypt) pair
+  - Used for Encrypt/Decrypt, or Sign/Verify operations  
+  - The public key is downloadable, but you can’t access the Private Key unencrypted
+  - __Use case__: encryption outside of AWS by users who can’t call the KMS API
+
+__Three types of KMS Keys__
+- __AWS Owned Keys (free)__: SSE-S3, SSE-SQS, SSE-DDB (default key)
+- __AWS Managed Key__: free (aws/service-name, example: aws/rds or aws/ebs)
+- __Customer managed keys__ created in KMS: $1 / month
+- __Customer managed keys imported__ (must be symmetric key): $1 / month + pay for API call to KMS ($0.03 / 10000 calls)
+
+__Key Rotation__
+
+- __Automatic__
+
+  - __AWS-managed KMS Key__
+    - automatic every 1 year 
+  - __Customer-managed KMS Key__
+    - must be enabled
+    - automatic every 1 year  
+- __Manual__
+  - __Imported KMS Key__
+    - only manual rotation possible using alias
+
+__Key Policies__
+
+- Control access to KMS keys, “similar” to S3 bucket policies
+- Cannot access KMS keys without a key policy
+- __Default Key Policy__
+  - Created if you don’t provide a specific Key Policy
+  - The default allow every one in your account to access the key
+- __Custom KMS Key Policy__
+  - Define users, roles that can access the KMS key
+  - Define who can administer the key
+  - Useful for cross-account access of your KMS key   
+
+
+__Cross-region Encrypted Snapshot Migration__
+- Copy the snapshot to another region with __re-encryption option__ using a new key in the new region (__keys are bound to a region__)
+
+__Cross-account Encrypted Snapshot Migration__
+- Create a Snapshot, encrypted with your own KMS Key (__Customer Managed Key__)
+- __Attach a KMS Key Policy to authorize cross-account access__
+- Share the encrypted snapshot
+- (in target) Create a copy of the Snapshot, encrypt it with a new CMK in your account
+- Create a volume from the snapshot
+
+__KMS Multi-Region Keys__
+
+- Identical KMS keys in different AWS Regions that can be used interchangeably
+- Multi-Region keys have the __same key ID, key material, automatic rotation__
+- Encrypt in one Region and decrypt in other Regions
+- No need to re-encrypt or making cross-Region API calls
+- KMS Multi-Region are NOT global (Primary + Replicas)
+- Each Multi-Region key is managed independently
+- __Use cases__: global client-side encryption, encryption on __Global DynamoDB, Global Aurora__
+
+__AMI Sharing Process Encrypted via KMS__
+- AMI in Source Account is encrypted with KMS Key from Source Account
+- Must modify the image attribute to add a __Launch Permission__ which corresponds to the specified __target AWS account__
+- Must share the __KMS Keys__ used to encrypted the snapshot the AMI references with the target account / IAM Role
+- The IAM Role/User in the target account must have the permissions to DescribeKey, ReEncrypted, CreateGrant, Decrypt
+- When launching an EC2 instance from the AMI, optionally the target account can specify a new KMS key in its own account to re-encrypt the volumes
+
+## SSM Parameter Store
+- Secure storage for configuration and secrets
+- Optional Seamless Encryption using KMS
+- Serverless, scalable, durable, easy SDK
+- Security through IAM
+- Notifications with Amazon EventBridge
+- Integration with CloudFormation
+
+__Parameter Tiers__
+
+<img width="1137" alt="Capture d’écran 2023-03-23 à 07 38 54" src="https://user-images.githubusercontent.com/35028407/227123434-5dfbaf5c-9757-4fe4-8431-07a41d106b4c.png">
+
+__Parameter Policies__
+- Only supported in advanced tie
+- Assign policies to a parameter for additional features
+  - Expire the parameter after some time (TTL)
+  - Parameter expiration notification
+  - Parameter change notification
+
+
+# Secrets Manager
+- Newer service, meant for storing secrets
+- Capability to force __rotation of secrets__ every X days(not available in __Parameter Store__)
+- Automate generation of secrets on rotation (uses Lambda)
+- Secrets are encrypted using KMS
+- Mostly used for __RDS(MySQL, PostgreSQL, Aurora) authentication__
+  - need to specify the username and password to access the database
+  - link the secret to the database to allow for automatic rotation of database login info
+
+__Secrets Manager – Multi-Region Secrets__
+- Replicate Secrets across multiple AWS Regions
+- Secrets Manager keeps read replicas in sync with the primary Secret
+- Ability to promote a read replica Secret to a standalone Secret
+- __Use cases__: multi-region apps, disaster recovery strategies, multi-region DB
+
+
+# Certificate Manager
+- Easily provision, manage, and deploy TLS Certificates
+- Used to provide in-flight encryption for websites (HTTPS)
+- Supports both public and private TLS certificates
+- Free of charge for public TLS certificates
+- __Automatic TLS certificate renewal__
+- load TLS certificates on
+  - Elastic Load Balancers (CLB, ALB, NLB)
+  - CloudFront Distributions
+  - APIs on API Gateway 
+  - Cannot use ACM with EC2 
