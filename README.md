@@ -1427,6 +1427,22 @@ __VPC Flow Logs__
 - Query VPC flow logs using __Athena__ in __S3__ or __CloudWatch Logs Insights__
 
 
+__IPv6 Support__
+- IPv4 cannot be disabled for your VPC
+- Enable IPv6 to operate in __dual-stack mode__ in which your EC2 instances will get at least a private IPv4 and a public IPv6. They can communicate using either __IPv4__ or __IPv6__ to the internet through an __Internet Gateway__.
+- If you cannot launch an EC2 instance in your subnet, It’s not because it cannot acquire an IPv6 (the space is very large). It’s because there are no available IPv4 in your subnet.
+- __Solution__: Create a new IPv4 CIDR in your subnet  
+
+![image](https://user-images.githubusercontent.com/35028407/227515123-40067ef6-9aab-4a73-8595-cc43ecccca1d.png)
+
+__Egress-only Internet Gateway__
+- Allows instances in your VPC to initiate outbound connections over IPv6 while preventing inbound IPv6 connections to your private instances.
+- Similar to NAT Gateway but for IPv6
+- Must update Route Tables
+
+![image](https://user-images.githubusercontent.com/35028407/227515543-8e4715e8-ff40-402d-86b6-d6d9c68088fb.png)
+
+
 # PrivateLink
 To open our applications up to other VPCs, we can either:
 - Open the VPC up to the Internet
@@ -1476,6 +1492,17 @@ __AWS VPN CloudHub__
    - Able to take massive throughput
    - Lower cost
    
+![image](https://user-images.githubusercontent.com/35028407/224578908-3c1ca9ca-9760-42bb-a995-2cf8f49809e8.png)
+
+  
+__Direct Connect Gateway__
+
+  - Used to setup a Direct Connect to multiple VPCs from your data center, possibly in different regions but same account
+  - Using DX, we will create a Private VIF to the Direct Connect Gateway which will extend the VIF to Virtual Private Gateways in multiple VPCs (possibly across regions).
+
+![image](https://user-images.githubusercontent.com/35028407/224579112-faf44a8e-5246-4f13-83bc-482425b5b3ba.png)
+  
+   
 __Connection Types__
 
   - __Dedicated Connection__
@@ -1485,14 +1512,14 @@ __Connection Types__
     - A physical Ethernet connection that an AWS Direct Connect Partner provisions on behalf of acustomer
     - 50Mbps, 500 Mbps, to 10 Gbps
 
-![image](https://user-images.githubusercontent.com/35028407/224578908-3c1ca9ca-9760-42bb-a995-2cf8f49809e8.png)
 
 __Encryption__
 
 - For encryption in flight, use AWS Direct Connect + __VPN__ which provides an __IPsec-encrypted private connection__
 - Good for an extra level of security
 
-![image](https://user-images.githubusercontent.com/35028407/227494342-6c424f5f-6d6b-46fb-b2ad-8ab17daedef6.png)
+![image](https://user-images.githubusercontent.com/35028407/227508639-d5c562b7-9dcf-4e1f-8315-b7a7da370bf7.png)
+
 
 __Resiliency__
 
@@ -1500,27 +1527,33 @@ __Resiliency__
 
 ![image](https://user-images.githubusercontent.com/35028407/227494776-b2b6eddb-ce79-44f7-a4f3-5b71cacb994d.png)
 
-- __Cost-effective way__ (VPN connection as a backup)
- - Implement an __IPSec VPN connection__ and use the __same BGP prefix__. Both the Direct Connect connection and IPSec VPN are active and being advertised using the Border Gateway Protocol (BGP). __The Direct Connect link will always be preferred__ unless it is unavailable.
-
-__Direct Connect Gateway__
-
-  - Used to setup a Direct Connect to multiple VPCs from your data center, possibly in different regions but same account
-  - Using DX, we will create a Private VIF to the Direct Connect Gateway which will extend the VIF to Virtual Private Gateways in multiple VPCs (possibly across regions).
-
-![image](https://user-images.githubusercontent.com/35028407/224579112-faf44a8e-5246-4f13-83bc-482425b5b3ba.png)
+- __VPN connection as a backup__ 
+  - In case Direct Connect fails, you can set up a __backup Direct Connect connection (expensive), or a Site-to-Site VPN connection__ 
 
 
 # Transit Gateway
 
 - __Transitive peering__ between thousands of VPCs and on-premise data centers using __hub-and-spoke (star) topology__
-- Works with __Direct Connect Gateway__, __VPN Connection
-- Regional resource, can work cross-region 
-- You can peer Transit Gateways across regions
-- Route Tables to control communication within the transitive network
+- Works with __Direct Connect Gateway__, __VPN Connection__
+- Regional resource, can work __cross-region__ 
+- You can peer Transit Gateways __across regions__
+- __Route Tables__ to control communication within the transitive network
 - Supports __IP Multicast__ (not supported by any other AWS service)
 
 ![image](https://user-images.githubusercontent.com/35028407/224579481-a1e10b06-f6d8-4a64-8e30-66c78229f5d1.png)
+
+
+__Increasing BW of Site-to-Site VPN connection__
+- ECMP = Equal-cost multi-path routing
+- To increase the bandwidth of the connection between Transit Gateway and corporate data center, create multiple site-to-site VPN connections, each with 2 tunnels (2 x 1.25 = 2.5 Gbps per VPN connection).
+
+![image](https://user-images.githubusercontent.com/35028407/227510952-38ade650-0e63-4bdd-9b83-9841ecfc88ad.png)
+
+__Share Direct Connect between multiple accounts__
+- Share Transit Gateway across accounts using Resource Access Manager (RAM) connection between VPCs in the __same region__ but different accounts
+
+![image](https://user-images.githubusercontent.com/35028407/227511205-5a9417ad-a06e-4d35-9342-ff56cfa35f8a.png)
+
 
 
 # Route 53
