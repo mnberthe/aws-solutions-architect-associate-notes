@@ -1290,8 +1290,7 @@ __Bastion Hosts__
 CIDR of your corporation
 - __Security Group of the EC2 Instance__ must allow the Security Group of the Bastion Host, or the private IP of the Bastion host
 
-![image](https://user-images.githubusercontent.com/35028407/227360848-ca36d049-0dd5-4586-936a-8eec9cb083f5.png)
-
+<img src="https://user-images.githubusercontent.com/35028407/227360848-ca36d049-0dd5-4586-936a-8eec9cb083f5.png" width="400" />
 
 
 __NAT Instance__
@@ -1335,7 +1334,7 @@ __NAT Gateway with High Availability__
 - Must create __multiple NAT Gateways__ in __multiple AZs__ for fault-tolerance
 - No cross-AZ failover needed because if an AZ goes down, all of the instances in that AZ also go down.
 
-![image](https://user-images.githubusercontent.com/35028407/224572232-0dc02ac3-1e4d-4bad-86e6-3c138c2d2393.png)
+<img src="https://user-images.githubusercontent.com/35028407/224572232-0dc02ac3-1e4d-4bad-86e6-3c138c2d2393.png" width="400" />
 
 
 __Network Access Control List (NACL)__
@@ -1433,7 +1432,7 @@ __IPv6 Support__
 - If you cannot launch an EC2 instance in your subnet, It’s not because it cannot acquire an IPv6 (the space is very large). It’s because there are no available IPv4 in your subnet.
 - __Solution__: Create a new IPv4 CIDR in your subnet  
 
-![image](https://user-images.githubusercontent.com/35028407/227515123-40067ef6-9aab-4a73-8595-cc43ecccca1d.png)
+<img src="https://user-images.githubusercontent.com/35028407/227515123-40067ef6-9aab-4a73-8595-cc43ecccca1d.png" width="400" />
 
 __Egress-only Internet Gateway__
 - Allows instances in your VPC to initiate outbound connections over IPv6 while preventing inbound IPv6 connections to your private instances.
@@ -1540,7 +1539,7 @@ __Resiliency__
 - __Route Tables__ to control communication within the transitive network
 - Supports __IP Multicast__ (not supported by any other AWS service)
 
-![image](https://user-images.githubusercontent.com/35028407/224579481-a1e10b06-f6d8-4a64-8e30-66c78229f5d1.png)
+<img src="https://user-images.githubusercontent.com/35028407/224579481-a1e10b06-f6d8-4a64-8e30-66c78229f5d1.png" width= "400"/>
 
 
 __Increasing BW of Site-to-Site VPN connection__
@@ -1621,8 +1620,9 @@ Each record contains:
    - No health check (if returning multiple resources, some of them might be unhealthy)
    - When Alias enabled, you can only specify one Aws resource as a target
 
-   ![image](https://user-images.githubusercontent.com/35028407/224734496-073f89af-49e1-4c2e-9213-eef3ef3411f9.png)
-   ![image](https://user-images.githubusercontent.com/35028407/224734556-e325660a-ab50-46a4-80d8-9a53ffd8e110.png)
+  <img src ="https://user-images.githubusercontent.com/35028407/224734496-073f89af-49e1-4c2e-9213-eef3ef3411f9.png" width="400"/>
+  <img src ="https://user-images.githubusercontent.com/35028407/224734556-e325660a-ab50-46a4-80d8-9a53ffd8e110.png" width="400"/>
+
 
 __Weighted__
 
