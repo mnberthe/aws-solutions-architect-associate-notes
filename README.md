@@ -1349,36 +1349,52 @@ __Network Access Control List (NACL)__
   - Based only on IP addresses
   - Rules number: 1-32766 (lower number has higher precedence)
   - First rule match will drive the decision
+  - The last rule denies the request (only when no previous rule matches)
+
 
 __NACL vs Security Group__
-_ NACL:
-  - Firewall for subnets
-  - Supports both Allow and Deny rules
-  - __Stateless__ (both request and response will be evaluated against the NACL rules)
-  
-- Security Group:
-  - Firewall for EC2 instances
-  - Supports only Allow rules
-  - __Stateful__ return traffic is automatically allowed,regardless of any rules
+
+ - __NACL__
+   - Firewall for subnets
+   - Supports both Allow and Deny rules
+   - __Stateless__ (both request and response will be evaluated against the NACL rules)
+ - __Security Group__
+   - Firewall for EC2 instances
+   - Supports only Allow rules
+   - __Stateful__ return traffic is automatically allowed,regardless of any rules
+
+![image](https://user-images.githubusercontent.com/35028407/227431682-2fa029ab-e6c1-4211-a512-ddadf3f9d095.png)
+
+
+__NACL with Ephemeral Ports__
+
+- For any two endpoints to __establish a connection__, they must use ports
+- Clients connect to a __defined port__, and expect a response on an __ephemeral port__
+- In the example below, the client EC2 instance needs to connect to DB instance. Since the ephemeral port can be randomly assigned from a range of ports, the Web Subnets’s NACL must allow inbound traffic from that range of ports and similarly DB Subnet’s NACL must allow outbound traffic on the same range of ports.
+
+![image](https://user-images.githubusercontent.com/35028407/227432695-6bf1d7db-a70e-4d07-9e27-598735e4b8a6.png)
+
+
 
 __VPC Peering__
 - Privately connect two VPCs using AWS network
 - Must not have overlapping CIDRs
 - VPC Peering connection is NOT transitive
 - Must update route tables in each VPC’s subnets to ensure requests destined to the peered VPC can be routed through the __peering connection__
+- You can create VPC Peering connection between VPCs in different __AWS
+accounts/regions__(cross account or cross region)
+- You can reference a __security group__ in a peered VPC (works cross accounts – same region)
 
 ![image](https://user-images.githubusercontent.com/35028407/224573874-c62c0540-a409-4208-8b00-e740a65fbd98.png)
 
 ![image](https://user-images.githubusercontent.com/35028407/224573884-adf59c75-6bb8-48bd-a973-073738009655.png)
 
-- You can create VPC Peering connection between VPCs in different AWS accounts/regions
-
 ![image](https://user-images.githubusercontent.com/35028407/224573970-04a0a16b-3774-42d3-90b5-a96f503b8e31.png)
 
 
-__VPC Endpoints__
 
-![image](https://user-images.githubusercontent.com/35028407/224574183-409f676e-b68c-4024-8539-5d94595ae278.png)
+
+__VPC Endpoints__
 
 - Every AWS service is publicly exposed (public URL)
 - VPC Endpoints (powered by __AWS PrivateLink__) allows you to connect to __AWS services__ using a __private network__ instead of using the public Internet
@@ -1390,10 +1406,25 @@ __VPC Endpoints__
     - Need to __attach a security group to the interface endpoint__ to control access
     - Supports most AWS services
     - No need to update the route table
+    - $ per hour + $ per GB of data processed
   - __Gateway Endpoint__
     - Provisions a gateway
     - Must be used as a target in a route table 
     - Supports only __S3__ and __DynamoDB__
+    - Free
+
+![image](https://user-images.githubusercontent.com/35028407/224574183-409f676e-b68c-4024-8539-5d94595ae278.png)
+
+__VPC Flow Logs__
+
+- Captures information about __IP__ traffic going into your __interfaces__
+- Three levels:
+  - __VPC__ Flow Logs
+  - __Subnet__ Flow Logs
+  - __ENI__ Flow Logs 
+- Can be configured to show accepted, rejected or all traffic
+- Flow logs data can be sent to __S3__ (bulk analytics) or __CloudWatch Logs__ (near real-time via metric filter)
+- Query VPC flow logs using __Athena__ in __S3__ or __CloudWatch Logs Insights__
 
 
 # PrivateLink
