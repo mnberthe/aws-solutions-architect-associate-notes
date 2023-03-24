@@ -83,10 +83,18 @@
 - [Site-to-Site VPN](#site-to-site-vpn)
 - [Direct connect](#direct-connect)
 - [Transit Gateway](#transit-gateway)
+- [Networking Costs](#networking-costs)
 
 ### Content delivery
 - [CloudFront](#cloudfront)
 - [Global Accelerator](#global-accelerator)
+
+### Monitoring & Audit
+- [CloudWatch](#cloudwatch)
+- [CloudTrail](#cloudtrail)
+- [Config](#config)
+- [Trusted Advisor](#trusted-advisor)
+- [Cost explorer](#cost-explorer)
 
 ### Access Management 
 - [Identity Access Management](#identity-access-management)
@@ -94,7 +102,6 @@
 - [SSO](#sso)
 - [Cognito](#cognito)
 - [AWS Directory Services](#aws-directory-services)
-
 
 ### Parameters & Encryption
 - [Key Management Service](#key-management-service)
@@ -109,13 +116,9 @@
 - [GuardDuty](#guardduty)
 - [Inspector](#inspector)
 - [Macie](#macie)
+- [Network Firewall](#network-firewall)
 
-### Monitoring & Audit
-- [CloudWatch](#cloudwatch)
-- [CloudTrail](#cloudtrail)
-- [Config](#config)
-- [Trusted Advisor](#trusted-advisor)
-- [Cost explorer](#cost-explorer)
+
 
 # Compute services
 
@@ -1554,6 +1557,25 @@ __Share Direct Connect between multiple accounts__
 ![image](https://user-images.githubusercontent.com/35028407/227511205-5a9417ad-a06e-4d35-9342-ff56cfa35f8a.png)
 
 
+# Networking Costs
+
+-  Use Private IP instead of Public IP for good savings and better network performance
+-  Use same AZ for maximum savings (at the cost of high availability)
+- Traffic entering the AWS is free
+- Traffic leaving an AWS region is paid
+
+
+<img width="879" alt="Capture d’écran 2023-03-24 à 18 00 11" src="https://user-images.githubusercontent.com/35028407/227594380-fe99e9e1-4791-4717-922d-44de9dede345.png">
+
+__Minimizing egress traffic network cost__
+
+- __Egress traffic__: outbound traffic (from AWS to outside)
+- __Ingress traffic__: inbound traffic - from outside to AWS (typically free)
+- Try to keep as much internet traffic within AWS to minimize costs
+- __Direct Connect location that are co-located in the same AWS Region result in lower cost for egress network__
+
+<img width="800" alt="Capture d’écran 2023-03-24 à 18 15 16" src="https://user-images.githubusercontent.com/35028407/227595283-64401898-7ad0-4648-9cc1-ba979eb34177.png">
+
 
 # Route 53
 
@@ -2847,3 +2869,14 @@ __Secrets Manager – Multi-Region Secrets__
 that uses __machine learning and pattern matching to discover and protect your sensitive data__ in AWS(ex in an S3 bucket).
 - Macie helps identify and alert you to sensitive data, such as __personally identifiable information (PII)__
 - Notifies through an __EventBridge event__
+
+## Network Firewall
+- Protect your entire Amazon VPC
+- From Layer 3 to Layer 7 protection
+- Any direction, you can inspect
+  - VPC to VPC traffic
+  - Outbound to internet
+  - Inbound from internet
+  - To / from Direct Connect & Site-to-Site VPN
+- Internally, the AWS Network Firewall uses the AWS Gateway Load Balancer 
+- Rules can be centrally managed cross- account by AWS Firewall Manager to apply to many VPCs
