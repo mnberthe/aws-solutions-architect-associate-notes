@@ -1454,9 +1454,10 @@ To open our applications up to other VPCs, we can either:
 ![image](https://user-images.githubusercontent.com/35028407/224577737-2f0cdd52-7952-4c9f-aceb-07873b70d668.png)
 
 __AWS VPN CloudHub__
-- __Low-cost hub-and-spoke model for network connectivity between a VPC and multiple on-premise data centers__
+- __Low-cost hub-and-spoke model for network connectivity between a VPC and multiple on-premise data centers(VPN only)__
 - Every participating network can communicate with one another through the VPN connection
 - It operates over the public internet, but all traffic between the customer gateway and the AWS VPN CloudHub is encrypted.
+- To set it up, connect __multiple VPN connections__ on the __same VGW__, setup dynamic routing and configure __route tables__
 
 ![image](https://user-images.githubusercontent.com/35028407/224577899-f80ab184-fc0f-4c72-9afe-da6e4ad724ac.png)
 
@@ -1474,8 +1475,9 @@ __AWS VPN CloudHub__
    - Reliable
    - Able to take massive throughput
    - Lower cost
+   
+__Connection Types__
 
-- __Connection Types__
   - __Dedicated Connection__
     - A physical Ethernet connection associated with a single customer.  
     - 1Gbps,10 Gbps and 100 Gbps capacity
@@ -1485,9 +1487,26 @@ __AWS VPN CloudHub__
 
 ![image](https://user-images.githubusercontent.com/35028407/224578908-3c1ca9ca-9760-42bb-a995-2cf8f49809e8.png)
 
-- __Direct Connect Gateway__
+__Encryption__
+
+- For encryption in flight, use AWS Direct Connect + __VPN__ which provides an __IPsec-encrypted private connection__
+- Good for an extra level of security
+
+![image](https://user-images.githubusercontent.com/35028407/227494342-6c424f5f-6d6b-46fb-b2ad-8ab17daedef6.png)
+
+__Resiliency__
+
+- __Best way__ (redundant direct connect connections)
+
+![image](https://user-images.githubusercontent.com/35028407/227494776-b2b6eddb-ce79-44f7-a4f3-5b71cacb994d.png)
+
+- __Cost-effective way__ (VPN connection as a backup)
+ - Implement an __IPSec VPN connection__ and use the __same BGP prefix__. Both the Direct Connect connection and IPSec VPN are active and being advertised using the Border Gateway Protocol (BGP). __The Direct Connect link will always be preferred__ unless it is unavailable.
+
+__Direct Connect Gateway__
 
   - Used to setup a Direct Connect to multiple VPCs from your data center, possibly in different regions but same account
+  - Using DX, we will create a Private VIF to the Direct Connect Gateway which will extend the VIF to Virtual Private Gateways in multiple VPCs (possibly across regions).
 
 ![image](https://user-images.githubusercontent.com/35028407/224579112-faf44a8e-5246-4f13-83bc-482425b5b3ba.png)
 
