@@ -112,7 +112,7 @@
 - [Certificate Manager](#certificate-manager)
 
 ### Cloud Security
-- [Web Application Firewall](web-application-firewall)
+- [Web Application Firewall](#web-application-firewall)
 - [AWS Shield](#aws-shield)
 - [Firewall Manager](#firewall-manager)
 - [GuardDuty](#guardduty)
@@ -120,6 +120,16 @@
 - [Macie](#macie)
 - [Network Firewall](#network-firewall)
 
+### HPC
+- [High Performance Computing](#high-performance-computing)
+
+### Docs
+
+[AWS Well Architected](https://aws.amazon.com/fr/architecture/well-architected)
+
+[AWS reference architectures](https://aws.amazon.com/fr/architecture/)
+
+[AWS architecture solution](https://aws.amazon.com/fr/solutions/)
 
 
 # Compute services
@@ -3004,3 +3014,31 @@ that uses __machine learning and pattern matching to discover and protect your s
   - To / from Direct Connect & Site-to-Site VPN
 - Internally, the AWS Network Firewall uses the AWS Gateway Load Balancer 
 - Rules can be centrally managed cross- account by AWS Firewall Manager to apply to many VPCs
+
+# HPC
+
+## High Performance Computing
+
+- Cloud is perfect for HPC
+- __Cluster placement group__ for low latency inter-nodal communication
+- __EC2 Enhanced Networking (SR-IOV)__
+  - __Elastic Network Adapter (ENA)__
+    - Supported in both Linux & __Windows__
+  - __Elastic Fabric Adapter (EFA)__
+    - Enhanced for HPC
+    - Supported in __Linux only__
+    - Leverages __Message Passing Interface (MPI)__ standard
+    - __Bypasses__ the underlying Linux OS to provide low-latency networking
+
+- __Automation and Orchestration__
+  - __AWS Batch__
+    - Used to run __single jobs that span multiple EC2 instances__ (multi-node) 
+  - __AWS Parallel Cluster__
+    - __Open-source cluster management__ tool to __deploy HPC on AWS__
+    - Configure with text files
+    - Automate creation of VPC, Subnet, cluster type and instance types
+    - Ability to enable __EFA__ on the cluster
+ 
+
+ 
+
