@@ -131,6 +131,7 @@
 
 [AWS architecture solution](https://aws.amazon.com/fr/solutions/)
 
+[AWS Disaster Recovery](https://aws.amazon.com/fr/disaster-recovery/)
 
 # Compute services
 
