@@ -52,14 +52,14 @@
 
 ###  Migration & Transfer
 - [Snow Family](#snow-family)
+- [DataSync](#datasync)
+- [Transfer Family](#transfer-family)
 - [Database Migration Service](#database-migration-service)
 - [Application migration service](#application-migration-service)
-- [DataSync](#datasync)
-- [AppSync](#app-sync)
-- [Transfer Family](#transfer-family)
+- [RDS and Aurora MySQL Migrations](#rds-and-aurora-mysql-migrations)
 
 ### Disaster Recovery 
-- [Disaster Recovery](#disaster)
+- [Disaster Recovery](#disaster-recovery)
 
 ### Machine Learning
 - [Rekognition](#rekognition)
@@ -102,6 +102,8 @@
 - [SSO](#sso)
 - [Cognito](#cognito)
 - [AWS Directory Services](#aws-directory-services)
+- [AWS Control Tower](#aws-control-tower)
+
 
 ### Parameters & Encryption
 - [Key Management Service](#key-management-service)
@@ -1011,6 +1013,13 @@ __Aws backup benefit__
 allowing you to expire  unnecessary backups after a period of time
 - __Improved Compliance__: Backup policies can be enforced while backups can be encrypted both at rest and in transit\
  allowing alignment to regulatory compliance
+ 
+ __Backup Vault__
+ - WORM (Write Once Read Many) model for backups
+ - Even the root user cannot delete backups
+ - Even the root user cannot delete backups
+   - Inadvertent or malicious delete operations
+   - Updates that shorten or alter retention periods 
  
  # Database
 
@@ -2062,11 +2071,9 @@ __Data migration__
     - Amazon FSx (Windows, Lustre, NetApp, OpenZFS...)
   -  Replication tasks can be scheduled hourly, daily, weekly
   - __File permissions and metadata are preserved (NFS POSIX, SMB…)__
-  
-  
-  ![image](https://user-images.githubusercontent.com/35028407/226283193-8d5cd915-7248-4a8d-ad47-3ca555db377b.png)
+ 
+ ![image](https://user-images.githubusercontent.com/35028407/226283193-8d5cd915-7248-4a8d-ad47-3ca555db377b.png)
 
-  
  
 ## Transfer Family
 
@@ -2080,6 +2087,109 @@ __Data migration__
 - Pay per provisioned endpoint per hour + fee per GB data transfers
 - Clients can either connect directly to the FTP endpoint or optionally through Route 53
 - Transfer Family will need permission(IAM roleà)- to read or put data into S3 or EFS
+
+## Database Migration Service
+- Migrate entire __databases__ from on-premises to __AWS cloud__
+- __The source database remains available during migration__
+- Continuous Data Replication using __CDC (change data capture)__
+- Requires __EC2 instance running the DMS software__ to perform the replication tasks. If the amount of data is large, use a large instance. If multi-AZ is enabled, need an instance in each AZ.
+
+__Types of Migration__
+
+__Homogeneous Migration__
+ - When the source and target DB engines are the same (eg. Oracle to Oracle)
+ - One step process:
+   - Use the __Database Migration Service (DMS)__ to migrate data from the source database to the target database 
+ 
+__Heterogeneous Migration__
+  - When the source and target DB engines are different (eg. Microsoft SQL Server to Aurora)
+  - Two step proces:
+    - Use the __Schema Conversion Tool (SCT)__ to convert the source schema and code to match that of the target database 
+    - Use the __Database Migration Service (DMS)__ to migrate data from the source database to the target database
+
+__Migrating using Snow Family__
+
+- Use the Schema Conversion Tool (SCT) to extract the data locally and move it to the Edge device
+- Ship the Edge device or devices back to AWS
+- After AWS receives your shipment, the Edge device automatically loads its data into an Amazon S3 bucket.
+- AWS DMS takes the files and migrates the data to the target data store (eg. DynamoDB)
+
+# Application migration service
+
+__AWS Application Discovery Service__
+- Plan migration projects by gathering information about on-premises data centers
+- Server utilization data and dependency mapping are important for migrations
+- Two types of migration:
+  - __Agentless Discovery (AWS Agentless Discovery Connector)__
+    - VM inventory, configuration, and performance history such as CPU, memory, and disk usage
+  - __Agent-based Discovery (AWS Application Discovery Agent)__
+    - System configuration, system performance, running processes, and details of the network connections between systems    
+- Resulting data can be viewed within AWS Migration Hub 
+
+__AWS Application Migration Service__
+- Lift-and-shift (rehost) solution which simplify migrating applications to AWS
+- Converts your physical, virtual, and cloud-based servers to run natively on AWS
+- Supports wide range of platforms, Operating Systems, and databases
+- Minimal downtime, reduced costs
+
+<img width="1111" alt="Capture d’écran 2023-03-25 à 12 51 14" src="https://user-images.githubusercontent.com/35028407/227715832-b76e2fc2-1e1c-455e-b4f2-29a120628f97.png">
+
+
+
+# RDS and Aurora MySQL Migrations
+
+__RDS MySQL to Aurora MySQL__
+ - __Option 1__: DB Snapshots from RDS MySQL restored as MySQL Aurora DB
+ - __Option 2__: Create an Aurora Read Replica from your RDS MySQL, and when the replication lag is 0, promote it as its own DB cluster (can take time and cost $)
+
+__External MySQL to Aurora MySQL__
+
+- __Option 1__: 
+  - Use Percona XtraBackup to create a file backup in Amazon S3
+  - Create an Aurora MySQL DB from Amazon S3
+- __Option 2__:
+  - Create an Aurora MySQL DB
+  - Use the mysqldump utility to migrate MySQL into Aurora (slower than S3 method)
+
+__Use DMS if both databases are up and running__
+
+__Same process with PostgreSQL__
+
+
+# Disaster Recovery
+
+## Disaster Recovery
+
+- Any event that has a negative impact on a company’s business continuity or finances is a disaster
+- __Recovery Point Objective (RPO)__: how often you backup your data (determines how much data are you willing to lose in case of a disaster)
+- __Recovery Time Objective (RTO)__: how long it takes to recover from the disaster (down time)
+
+
+![image](https://user-images.githubusercontent.com/35028407/227709642-9f16d5fc-c0aa-4994-9f8e-cc863ffe69af.png)
+
+
+  __Strategies__
+  
+  - __Backup & Restore__
+    - High RPO (hours)
+    - Need to spin up instances and restore volumes from snapshots in case of disaster => High RTO 
+    - Cheapest & easiest to manage
+  - __Pilot Light__
+    - __Critical parts of the app are always running__ in the cloud (eg. continuous replication of data to another region)
+    - Low RPO (minutes)
+    - Critical systems are already up => Low RTO
+    - Ideal when RPO should be in minutes and the solution should be inexpensive
+    - DB is critical so it is replicated continuously but EC2 instance is spin up only when a disaster strikes
+  - __Warm Standby__
+    - A complete backup system is up and running at the minimum capacity. This system is quickly scaled to production capacity in case of a disaster.
+    - Very low RPO & RTO (minutes)
+    - Expensive
+  - __Multi-Site or Hot Site Approach__
+    - A backup system is running at full production capacity and the request can be routed to either the main or the backup system. 
+    - Multi-data center approach
+    - Lowest RPO & RTO (minutes or seconds)
+    - Very Expensive
+   
 
 # Machine Learning
 
@@ -2645,6 +2755,20 @@ __AD Connector__
 __Simple AD__
 - AD-compatible managed directory on AWS
 - Cannot be joined with on-premises AD
+
+## AWS Control Tower
+
+- Easy way to __set up and govern a secure and compliant multi-account AWS environment__ based on best practices
+- AWS Control Tower uses AWS Organizations to create accounts
+- Benefits:
+  - Automate the set up of your environment in a few clicks 
+  - Automate ongoing policy management using guardrails
+  - Detect policy violations and remediate them
+  - Monitor compliance through an interactive dashboard
+- __Guardrails__
+  - Provides ongoing governance for your Control Tower environment (AWS Accounts)
+  - __Preventive Guardrail__ – using SCPs (e.g., Restrict Regions across all your accounts)  
+  - __Detective Guardrail__ – using AWS Config (e.g., identify untagged resources)
 
 # Parameters & Encryption
 
