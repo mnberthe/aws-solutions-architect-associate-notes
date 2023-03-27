@@ -670,14 +670,20 @@ __Security__
   - IAM policies define which API calls should be allowed for a specific user
   - Preferred over bucket policy for fine-grained access control
 
-- __Resource-Based__
+- __Resource Based Policies__
 
    - __Bucket Policies__
      - Grant public access to the bucket
+     - Can either add or deny permissions across all (or a subset) of objects within a bucket.
      - Force objects to be encrypted at upload
      - Cross-account access
-  -  __Object Access Control List (ACL)__ - applies to the objects while uploading
-  -  __Bucket Access Control List (ACL)__ - access policy that applies to the bucket
+   - __Access Control Lists__
+     - A list of grants identifying grantee and permission granted  
+     - ACLs use an __S3–specific XML__ schema. 
+     - __You can grant permissions only to other AWS accounts, not to users in your account__
+     - You cannot grant conditional permissions, nor explicitly deny permissions.
+     - __Object ACLs are limited to 100 granted permissions per ACL__
+     - __The only recommended use case for the bucket ACL is to grant write permissions to the S3 Log Delivery group__
   
 - __Note__: An IAM principal can access an S3 object if the IAM permission allows it or the bucket policy allows it and there is no explicit deny.
 
