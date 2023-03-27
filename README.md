@@ -655,8 +655,6 @@ __Amazon S3 – Replication__
 - __Same-Region Replication (SRR)__
 - Buckets can be in different AWS accounts
 - After you enable Replication, only new objects are replicated
-- __Cross-Region Replication (CRR)__
-- After you enable Replication, only new objects are replicated
 - You can replicate existing objects using S3 __Batch Replication__
 - For DELETE operations:
   - Replicate delete markers from source to target (optional)
