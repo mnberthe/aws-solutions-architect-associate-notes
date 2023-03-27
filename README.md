@@ -686,7 +686,18 @@ __Security__
      - __The only recommended use case for the bucket ACL is to grant write permissions to the S3 Log Delivery group__
   
 - __Note__: An IAM principal can access an S3 object if the IAM permission allows it or the bucket policy allows it and there is no explicit deny.
-
+- __Important__
+  - When you configure a bucket as a static website, if you want your website to be public, you can grant public read access. To make your bucket   publicly readable, you must disable block public access settings for the bucket and write a bucket policy that grants public read access. If your bucket contains objects that are not owned by the bucket owner, you might also need to add an object access control list (ACL) that grants everyone read access.
+  - If you don't want to disable block public access settings for your bucket but you still want your website to be public, you can create a Amazon CloudFront distribution to serve your static website
+  - __You can use a bucket policy to grant public read permission to your objects. However, the bucket policy applies only to objects that are owned by the bucket owner. If your bucket contains objects that aren't owned by the bucket owner, the bucket owner should use the object access control list (ACL) to grant public READ permission on those objects.__
+  
+__Accessing a bucket__
+ - __Virtual-hosted–style access__
+   - https://bucket-name.s3.region-code.amazonaws.com/key-name 
+   - https://DOC-EXAMPLE-BUCKET1.s3.us-west-2.amazonaws.com/puppy.png
+ - __Path-style access__
+   - https://s3.region-code.amazonaws.com/bucket-name/key-name
+   - https://s3.us-west-2.amazonaws.com/DOC-EXAMPLE-BUCKET1/puppy.jpg
 
 __You can encrypt objects in S3 buckets using one of 4 methods__
 - __Encryption in Transit__
@@ -994,12 +1005,16 @@ __FSx File Gateway__
 
 __Volume Gateway__
 
-- Block storage using iSCSI protocol backed by S3
+- Block storage using iSCSI(Internet Small Computer System Interface ) protocol backed by S3
 - Backed by __EBS snapshots__ which can help restore on-premises volumes
 - Two kinds of volumes:
-  - __Cached volumes__: low latency access to most recent data
-  - __Stored volumes__: entire dataset is on premise, scheduled backups to S3
-  
+  - __Cached volumes__: 
+    - You store your data in S3 and __retain a copy of frequently accessed data subsets locally__
+    - Low latency access to most recent data
+  - __Stored volumes__:
+    - you store the entire set of volume data on premise and store periodic point in time backup(snapshots) in S3
+    - Low-latency access to your entire dataset
+    
   ![image](https://user-images.githubusercontent.com/35028407/226277537-507618d3-46af-4567-933a-aaa1981cba97.png)
 
 __Tape Gateway__
