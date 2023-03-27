@@ -647,6 +647,8 @@ __Versioning__
 - Protect against unintended deletes (ability to restore a version)
 - Easy roll back to previous version 
 - With versioning, all versions of an object are stored and can be retrieved, including deleted objects. 
+- When you DELETE an object, all versions remain in the bucket and Amazon S3 inserts a __delete marker__.
+- You can permanently delete an object by specifying the version you want to delete. Only the owner of an Amazon S3 bucket can permanently delete a version. 
 - Versioning can only be suspended once it has been enabled.
 
 __Amazon S3 – Replication__
