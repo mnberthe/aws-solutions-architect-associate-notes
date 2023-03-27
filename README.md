@@ -133,6 +133,9 @@
 
 [AWS Disaster Recovery](https://aws.amazon.com/fr/disaster-recovery/)
 
+[other ressources](https://drive.google.com/file/d/1Qo4DJFxyYwuhjLfJ24oXvA3bmG9Cvfnw/view)
+[Tips](https://www.toptal.com/aws-cloud-engineers/aws-certified-solutions-architect-exam-tips)
+
 # Compute services
 
 ## EC2 
