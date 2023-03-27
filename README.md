@@ -779,15 +779,17 @@ __S3 Glacier__
   - Minimum storage duration of __90 days__
 - __Amazon S3 Glacier Flexible Retrieval__
   - __Data accessed once a year__
-  - Expedited (1 to 5 minutes)  
-  - Standard (3 to 5 hours)
-  - Bulk (5 to 12 hours)
+  - 3 retrieval flexibility:
+    - Expedited (1 to 5 minutes)  
+    - Standard (3 to 5 hours)
+    - Bulk (5 to 12 hours)
   - Minimum storage duration of 90 days
 
 - __Amazon S3 Glacier Deep Archive – for long term storage__
   - __Data accessed once a year__
-  - Standard (12 hours)  
-  - Bulk (48 hours)
+  - 2 flexible retrieval: 
+    - Standard (12 hours)  
+    - Bulk (48 hours)
   - Minimum storage duration of 180 days
 
 __S3 Lifecycle Management__
