@@ -1078,9 +1078,9 @@ allowing you to expire  unnecessary backups after a period of time
  __Backup Vault__
  - WORM (Write Once Read Many) model for backups
  - Even the root user cannot delete backups
- - Even the root user cannot delete backups
-   - Inadvertent or malicious delete operations
-   - Updates that shorten or alter retention periods 
+ - Additional layer of defense to protect your backups against:
+     - Inadvertent or malicious delete operations
+     - Updates that shorten or alter retention periods 
  
  # Database
 
