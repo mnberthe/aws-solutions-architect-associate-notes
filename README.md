@@ -904,22 +904,21 @@ __EBS Encryption__
 - Compatible with Linux-based AMI (Windows not supported at this time)
 - Encryption at rest using KMS
 
-__EFS – Performance__
-- EFS can support thousands of concurrent connections (EC2 instances).
-- EFS can handle up to 10 Gbps in throughput.
-- Scale your storage to petabytes.
-
 __Performance Mode__
-
- When creating an EFS file system, you can set what performance characteristics you want
-  - __General Purpose__ (default): latency-sensitive use cases (web server, CMS, etc.) 
-  - __Max I/O__ : higher latency & throughput (big data, media processing)
+ - File system performance is typically measured by using the dimensions of __latency, throughput, and Input/Output__ operations per second (IOPS)
+ - When creating an EFS file system, you can set what performance characteristics you want
+   - __General Purpose__ (default): 
+      - Has the lowest per-operation latency
+      - Use cases (web server, CMS, etc.) 
+   - __Max I/O__ : 
+      - Max I/O mode is designed for highly parallelized workloads that can tolerate __higher latencies__ than the General Purpose mode 
+      - higher latency & throughput (big data, media processing)
 
 __Throughput Mode__
 - __Bursting__ (default)
   - Throughput: 50MB/s per TB
   - Burst of up to 100MB/s.
-  - BRewoursting Throughput mode is recommended for workloads that require throughput that scales with the amount of storage in your file system.
+  - Bursting Throughput mode is recommended for workloads that require throughput that scales with the amount of storage in your file system.
 - __Provisioned__
   - Fixed throughput (provisioned)
   - In Provisioned Throughput mode, you specify a level of throughput that the file system can drive independent of the file system's size 
