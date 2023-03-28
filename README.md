@@ -676,11 +676,13 @@ __Security__
      - Grant public access to the bucket
      - Can either add or deny permissions across all (or a subset) of objects within a bucket.
      - Force objects to be encrypted at upload
+     - You use a bucket policy to control access to objects in the bucket that are owned by the account used to create the bucket. Y
      - Cross-account access
    - __Access Control Lists__
      - A list of grants identifying grantee and permission granted  
      - ACLs use an __S3–specific XML__ schema. 
      - __You can grant permissions only to other AWS accounts, not to users in your account__
+     - You need to use an ACL to control access to objects in your bucket but owned by other account 
      - You cannot grant conditional permissions, nor explicitly deny permissions.
      - __Object ACLs are limited to 100 granted permissions per ACL__
      - __The only recommended use case for the bucket ACL is to grant write permissions to the S3 Log Delivery group__
@@ -907,23 +909,46 @@ __EFS – Performance__
 - EFS can handle up to 10 Gbps in throughput.
 - Scale your storage to petabytes.
 
-__Controlling Performance__
+__Performance Mode__
 
  When creating an EFS file system, you can set what performance characteristics you want
   - __General Purpose__ (default): latency-sensitive use cases (web server, CMS, etc.) 
   - __Max I/O__ : higher latency & throughput (big data, media processing)
-  
+
+__Throughput Mode__
+- __Bursting__ (default)
+  - Throughput: 50MB/s per TB
+  - Burst of up to 100MB/s.
+  - BRewoursting Throughput mode is recommended for workloads that require throughput that scales with the amount of storage in your file system.
+- __Provisioned__
+  - Fixed throughput (provisioned)
+  - In Provisioned Throughput mode, you specify a level of throughput that the file system can drive independent of the file system's size 
+
 __Storage Tiers__
 
 - EFS comes with storage tiers and lifecycle management, allowing you to move your data from one tier to another after X number of days.
    - __Standard__ For frequently accessed files  
    - __Infrequently Accessed__ For files not frequently accessed
    
+__Encryption__
+- EFS supports two forms of encryption for file systems
+- __Encryption of data in transit__
+  - You can enable encryption of data in transit when you __mount the file system using the Amazon EFS mount helper__
+  - Data is encrypted in transit without needing to modify your applications.
+- __Encryption at rest__
+  - You can enable encryption of data at rest when __creating an Amazon EFS file__
+  - You can create encrypted file systems using:
+    - AWS Management Console 
+    - AWS CLI
+    - SDK
+ 
 # Instance Store
 - EBS volumes are network drives with good but “limited” performance
 - If you need a high-performance hardware disk, use EC2 Instance Store
 - Better I/O performance
+- You can specify the instance store volumes for your instance only __when you launch it__. You can't attach instance store volumes to an instance after you've launched it.
 - EC2 Instance Store lose their storage if they’re stopped (ephemeral)
+- Instance store persists during __reboots__, not during the __stop and start of the instance__.
 - Good for buffer / cache / scratch data / temporary content 
 
 
