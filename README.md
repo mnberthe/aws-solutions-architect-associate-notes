@@ -1184,7 +1184,7 @@ stopping it for a long time, you should snapshot & restore instead
 __RDS Proxy__
   - Fully managed database proxy for RDS
   - Allows apps to pool and share DB connections established with the database
-  - mproving database efficiency by reducing the stress on database resources (e.g., CPU, RAM) and minimize open connections (and timeouts)
+  - improving database efficiency by reducing the stress on database resources (e.g., CPU, RAM) and minimize open connections (and timeouts)
   - Serverless, autoscaling, highly available (multi-AZ)
   - __Reduced RDS & Aurora failover time by up 66%__
   - __Enforce IAM Authentication for DB, and securely store credentials in AWS Secrets Manager__
@@ -1359,6 +1359,392 @@ __DynamoDB Global Tables__
 - __Use cases__: IoT apps, operational applications, real time analytics, …
 
 
+# Decoupling applications
+
+- Synchronous between applications can be problematic if there are sudden spikes of traffic
+- What if you need to suddenly encode 1000 videos but usually it’s 10?
+- In that case, it’s better to decouple your applications:
+  - using SQS: queue model
+  - using SNS: pub/sub model
+  - using Kinesis: real-time streaming model 
+- These services can scale independently from our application 
+
+## SQS 
+For Simple Notification Service
+- Used to asynchronously decouple applications
+- Supports multiple producers & consumers
+- The message is persisted in SQS until a consumer deletes it
+- The consumer polls the queue for messages. Once a consumer processes a message, it __deletes__ it from the queue using __DeleteMessage API__.
+- __Max message size: 256KB__
+- __Default message retention: 4 days (max: 14 days)__
+- __Consumers could be EC2 instances or Lambda functions, Kinesis__
+
+ ### Queue Types
+ 
+ ### Standard Queue
+ - Unlimited throughput (publish any number of message per second into the queue)
+ - Low latency (<10 ms on publish and receive)
+ - Can have duplicate messages (at least once delivery)
+ - Can have out of order messages (best effort ordering)
+ 
+ ### FIFO Queue
+ 
+ - Limited throughput: 300 msg/s without batching, 3000 msg/s with
+ - Messages are processed in order by the consumer
+ - __Message De-duplication__:
+   - __De-duplication interval__: 5 min (duplicate messages will be discarded only if they are sent less than 5 mins apart)
+   - __De-duplication methods__:
+     - __Content-based de-duplication__: computes the hash of the message body and compares
+     - __Using a message de-duplication ID__: messages with the same __de-duplication ID__ are considered duplicates
+ - __Message Grouping__
+   - Group messages based on __MessageGroupID__ to send them to different consumers
+   - Same value for __MessageGroupID__
+     - All the messages are in order
+     - Single consumer
+   - Different values for MessageGroupID
+     - Messages will be ordered for each group ID
+     - Ordering across groups is not guaranteed(messages that belong to different message groups)
+     - Each group ID can have a different consumer (parallel processing)
+     
+ ### Consumer Auto Scaling
+ 
+ We can attach an ASG to the consumer instances which will scale based on the CW metric __Queue Length__(ApproximateNumberOfMessages)
+ CW alarms can be triggered to step scale the consumer application.
+ 
+ ### Security
+ 
+ __Encryption__
+ - In-flight encryption using HTTPS API
+ - At-rest encryption using KMS keys
+ - Client-side encryption if the client wants to perform encryption/decryption itself 
+ 
+ __Access Controls__ : IAM policies to regulate access to the SQS API
+ 
+ __SQS Access Policies(resource based policy)__
+   - Useful for cross-account access to SQS queues
+   - Useful for allowing other services (SNS, S3…) to write to an SQS queue
+ 
+ ### Configurations
+ __Message Visibility Timeout__
+ - After a message is polled by a consumer, it becomes __invisible__ to other consumers
+ - By default, the “message visibility timeout” is __30 seconds__
+ - That means the message has __30 seconds__ to be processed
+ - After the message visibility timeout is over, the message is “visible” in SQS
+ - A consumer could call the __ChangeMessageVisibility__ API to get more time
+ - If visibility timeout is high (hours), and consumer crashes, re-processing will take time
+ - If visibility timeout is too low (seconds), we may get duplicates
+ 
+ ![image](https://user-images.githubusercontent.com/35028407/225288979-b11b0e56-47cf-4017-9118-cad881cb83f8.png)
+
+
+__Dead Letter Queue (DLQ)__
+- An SQS queue used to store failing to be processed messages in another queue
+- After the __MaximumReceives__(the number of times that a message can be received before being sent to a dead-letter queue) threshold is exceeded, the message goes into the DLQ
+- __Redrive to Source__ - once the bug in the consumer has been resolved, messages in the DLQ can be sent back to the queue (original queue or a custom queue) for processing
+- Prevents resource wastage
+- Recommended to set a high retention period for DLQ (14 days)
+
+__Queue Delay/Delivery Delay__
+ - Delay message delivery
+- Consumers see the message after some delay
+- Default: 0 (Max: 15 min)
+- Can be set at the queue level
+
+__Long Polling__
+
+- When a consumer requests messages from the queue, it can optionally “wait” for messages to arrive if there are none in the queue
+- This is called Long Polling
+- Decreases the number of API calls made to __SQS (cheaper)__
+- Reduces latency (incoming messages during the polling will be read instantaneously)
+- Polling time: 1 sec to 20 sec
+- Long Polling is preferred over Short Polling
+- Can be enabled at the queue level or at the consumer level by using __WaitTimeSeconds__ parameter in__ ReceiveMessage__ API.
+
+__SQS + Lambda + DLQ__
+
+Failed messages (after the set number of retries) are sent to the DLQ by the SQS queue
+![image](https://user-images.githubusercontent.com/35028407/225288575-42fd9606-21e8-4012-a7d4-51d6b51ac450.png)
+
+
+## SNS
+For SNS for Simple Queue Service
+- Pub-Sub model (publisher publishes messages to a topic, subscribers listen to the topic)
+- Instant message delivery (does not queue messages)
+
+__Security__
+
+__Encryption__
+ - In-flight encryption using HTTPS API
+ - At-rest encryption using KMS keys
+ - Client-side encryption if the client wants to perform encryption/decryption itself 
+ 
+__Access Controls__ : IAM policies to regulate access to the SNS API
+ 
+__SNS Access Policies(resource based policy)__
+ - Useful for cross-account access to SNS queues
+ - Useful for allowing other services (S3…) to write to an SNS queue
+ 
+ __Standard Topics__
+ - Highest throughput
+ - At least once message delivery
+ - Best effort ordering
+ - Subscribers can be:
+   - SQS queue
+   - HTTP / HTTPS endpoints
+   - Lambda functions
+   - Emails (using SNS)
+   - SMS & Mobile Notifications
+   - Kinesis Data Firehose (KDF) to send the data into S3 or Redshift
+
+__FIFO Topics__
+  - Guaranteed ordering of messages in that topic
+  - Publishing messages to a FIFO topic requires:
+    - __Ordering__ by Message Group ID (all messages in the same group are ordered)
+    - __Deduplication using__ a Deduplication ID or Content Based Deduplication
+  - Can only have SQS FIFO queues as subscribers
+  - __Limited throughput__ (same as SQS FIFO) because only SQS FIFO queues can read from FIFO topics
+  
+  __SNS + SQS Fanout Pattern__
+  
+  - Fully decoupled, no data loss
+  - SQS allows for: data persistence, delayed processing and retries of work
+  - Make sure your SQS queue access policy allows for SNS to write
+  
+  ![image](https://user-images.githubusercontent.com/35028407/225294978-dfb124e9-1b77-4355-bed4-b6569b7b68ba.png)
+
+  
+## Kinesis
+- Makes it easy to collect, process, and analyze streaming data in real-time
+- Ingest real-time data such as: Application logs, Metrics, Website clickstreams,
+IoT telemetry data…
+
+### Kinesis Data Streams 
+- Real-time data streaming service
+- __Used to ingest data in real time directly from source__
+- Retention between 1 day to 365 days
+- Ability to reprocess (replay) data
+- Once data is inserted in Kinesis, it can’t be deleted (immutability)
+- Data that shares the same partition goes to the same shard (ordering)
+- Producers: AWS SDK, Kinesis Producer Library (KPL), Kinesis Agent
+- Consumers:
+    - Write your own: Kinesis Client Library (KCL), AWS SDK
+    - Managed: AWS Lambda, Kinesis Data Firehose, Kinesis Data Analytics, 
+  
+- __Capacity Modes__
+  - __Provisioned__
+   - You choose the number of shards provisioned, scale manually or using API
+   - Each shard gets 1MB/s in (or 1000 records per second)
+   - Each shard gets 2MB/s out (classic or enhanced fan-out consumer)
+   - You pay per shard provisioned per hour
+  - __On-demand mode__
+   - No need to provision or manage the capacity
+   - Default capacity provisioned (4 MB/s in or 4000 records per second)
+   - Scales automatically based on observed throughput peak during the last 30 days
+   - Pay per stream per hour & data in/out per GB
+  
+  ![image](https://user-images.githubusercontent.com/35028407/225446271-ac6c3c50-515f-4fbe-afcd-5727bfdff773.png)
+
+### Amazon MQ
+
+- If you have some traditional applications running from on-premise, they may use open protocols such as __MQTT, AMQP, STOMP, Openwire, WSS, etc__. When migrating to the cloud, instead of re-engineering the application to use SQS and SNS (AWS proprietary), we can use Amazon MQ (managed Apache ActiveMQ) for communication. 
+- Doesn’t “scale” as much as SQS or SNS because it is provisioned 
+- Runs on a dedicated machine (can run in HA with failover)
+- __Has both queue feature (SQS) and topic features (SNS)__
+ 
+### Kinesis Data Firehose 
+
+- Fully Managed Service, no administration, automatic scaling, serverless
+- Used to load streaming data into a target location with optional transformation
+- Can ingest data in real time directly from source
+- Destinations:
+  - __AWS: Redshift, S3, OpenSearch__
+  - 3rd party: Splunk, MongoDB, DataDog, NewRelic, etc.
+  - Custom HTTP endpoint
+  - Supports custom data transformation using Lambda functions
+  - No replay capability (does not store data like KDS)
+
+![image](https://user-images.githubusercontent.com/35028407/225447015-a7b9e3ee-e23a-48eb-81ca-2f85b8eeba66.png)
+
+
+### Event Bridge
+- __Schedule or Cron__ to create events on a schedule
+- __Event Pattern__: Event rules to react to a service doing something
+- Trigger Lambda functions, send SQS/SNS messages
+
+
+# Data & Analytics
+
+## Athena
+
+- Serverless query service to analyze data stored in Amazon S3
+- Uses __SQL__ language to query the files
+- Built on Presto engine
+- Output stored in S3
+- Supports CSV, JSON, ORC, Avro, and Parquet file format
+- Commonly used with Amazon Quicksight for reporting/dashboards
+
+__Performance__
+ - Use __columnar data__ for cost-savings (less scan)
+ - __Compress data__ for smaller retrievals (bzip2, gzip, lz4, snappy, zlip, zstd…)
+ - Partition datasets in S3 for easy querying on virtual columns
+
+__Amazon Athena – Federated Query__
+- Allows you to run SQL queries across data stored in relational, non-relational, object, and custom data sources (AWS or on-premises)
+- Store the results back in Amazon S3
+
+# Redshift
+- AWS managed __data warehouse__ (10x better performance than other data warehouses)
+- Based on __PostgreSQL__
+- Used for __Online Analytical Processing (OLAP)__ and high performance querying
+- __Columnar storage__ of data with __massively parallel query execution__ in __SQL__
+- Faster querying than __Athena__ due to indexes
+- Need to provision instances as a part of the Redshift cluster (pay for the instances provisioned)
+- Integrated with Business Intelligence (BI) tools such as __QuickSight or Tableau__
+- Redshift Cluster can have __1 to 128 nodes (128TB per node)__
+  - __Leader Node__: query planning & result aggregation 
+  - __Compute Nodes__: execute queries & send the result to leader node
+
+- No multi-AZ support (all the nodes will be in the same AZ)
+
+__Loading data into Redshift__
+
+- __S3__
+  - Use __COPY command__ to load data from an S3 bucket into Redshift 
+  - __Without Enhanced VPC Routing__
+    - data goes through the public internet
+  - __Enhanced VPC Routing__
+    - data goes through the VPC without traversing the public internet
+- __Kinesis Data Firehose__
+  - Sends data to __S3__ and issues a __COPY command__ to load it into Redshift   
+- __EC2 Instance__
+  - Using __JDBC driver__
+  - Used when an application needs to write data to Redshift
+  - Optimal to write data in batches 
+
+__Snapshots & DR__
+- Snapshots are point-in-time backups of a cluster, stored internally in S3
+- Snapshots are incremental (only what has changed is saved)
+- You can restore a snapshot into a __new cluster__
+- __Automated__
+  - every 8 hours, every 5 GB, or on a schedule
+  - Set retention between 1 to 35 days
+- __Manual__
+  - snapshot is retained until you delete it  
+
+- __Feature to automatically copy snapshots into another region__
+
+__Redshift Spectrum__
+- Query data present in S3 without loading it into Redshift
+- Need to have a Redshift cluster to use this feature
+- Query is executed by 1000s of Redshift Spectrum nodes
+- Consumes much less of your cluster's processing capacity than other queries
+
+## OpenSearch
+
+- Amazon OpenSearch is successor to __Amazon ElasticSearch__
+- Used in combination with a database to perform __search operations on the database__
+- Can search on any field, even supports __partial matches__
+- Need to provision a cluster of instances (pay for provisioned instances)
+- Supports Multi-AZ
+- Used in Big Data
+- Security through Cognito & IAM, KMS encryption, TLS
+- Comes with __Kibana__ (visualization) & __Logstash__ (log ingestion)
+
+## EMR
+
+- EMR stands for “Elastic MapReduce”
+- EMR helps creating __Hadoop clusters (Big Data)__ to analyze and process vast amount of data  
+- The clusters can be made of __hundreds of EC2 instances__
+- EMR comes bundled with __Apache Spark, HBase, Presto, Flink…__
+- EMR takes care of all the __provisioning and configuration__
+- __Auto-scaling__
+- Integrated with __Spot Instances__
+
+## QuickSight
+
+- __Serverless machine learning-powered business intelligence service to create interactive dashboards__
+- Fast, automatically scalable, embeddable
+- Use cases:
+  - Business analytics
+  - Building visualizations
+  - Get business insights using data
+- Integrated with :
+  - RDS
+  - Aurora
+  - Athena
+  - Redshift
+  - S3
+
+# Glue
+
+- Managed __extract, transform, and load (ETL)__ service
+- Useful to prepare and transform data for __analytics__
+- Fully __serverless__ service 
+
+![image](https://user-images.githubusercontent.com/35028407/226724824-88501505-8756-4bc0-b00a-6fa512a75b61.png)
+
+- Used to get data from a store, process and put it in another store (could be the same store)
+- __Glue Job Bookmarks__: prevent re-processing old data
+- __Glue Data Crawlers__ crawl databases and collect metadata which is populated in Glue Data Catalog
+- Data lake is stored into S3
+
+# Lake Formation 
+
+- __Data lake = central place to have all your data for analytics purpose__
+- Fully managed service that makes it easy to setup a __data lake__ in days
+- Out-of-the-box source __blueprints__: S3, RDS, Relational & NoSQL DB…
+- __Fine-grained Access Control for your applications (row and column-level)__
+
+
+## Kinesis Data analytics
+
+__Kinesis Data Analytics (SQL application)__
+- Real-time analytics on __Kinesis Data Streams__ & __Firehose__ using SQL
+- Add reference data from Amazon S3 to enrich streaming data
+- Fully managed, no servers to provision
+- Automatic scaling
+- __Output__
+  - Kinesis Data Streams: create streams out of the real-time analytics queries 
+  - Kinesis Data Firehose: send analytics query results to destinations
+- __Use cases:__
+  - Time-series analytics
+  - Real-time dashboards  
+  - Real-time metrics
+
+![image](https://user-images.githubusercontent.com/35028407/226729226-bad6dbde-3ed8-42b3-af2a-af867ffdd6f0.png)
+
+__Kinesis Data Analytics for Apache Flink__
+- Use Flink (Java, Scala or SQL) to process and analyze streaming data
+- Use any Apache Flink programming features
+- Flink does not read from Firehose (use Kinesis Analytics for SQL instead)
+- SOurce :
+  - Kinesis Data Streams 
+  - Amazon MSK
+
+
+# MSK Managed Streaming for Apache Kafka
+
+- Alternative to Amazon Kinesis both allow to stream data
+- Fully managed Apache Kafka on AWS
+  - Allow you to create, update, delete clusters
+  - MSK creates & manages Kafka brokers nodes & Zookeeper nodes for you
+  - Deploy the MSK cluster in your VPC, multi-AZ (up to 3 for HA)
+  - Data is stored on EBS volumes for as long as you want 
+
+__MSK Serverless__
+
+- Run Apache Kafka on MSK without managing the capacity
+- MSK automatically provisions resources and scales compute & storage
+
+# Big Data Ingestion Pipeline
+- We want the ingestion pipeline to be fully serverless
+- We want to collect data in real time
+- We want to transform the data
+- We want to query the transformed data using SQL
+- The reports created using the queries should be in S3
+- We want to load that data into a warehouse and create dashboards
+
+
 # Networking
 
 ## VPC
@@ -1472,7 +1858,6 @@ __NACL with Ephemeral Ports__
 - In the example below, the client EC2 instance needs to connect to DB instance. Since the ephemeral port can be randomly assigned from a range of ports, the Web Subnets’s NACL must allow inbound traffic from that range of ports and similarly DB Subnet’s NACL must allow outbound traffic on the same range of ports.
 
 ![image](https://user-images.githubusercontent.com/35028407/227432695-6bf1d7db-a70e-4d07-9e27-598735e4b8a6.png)
-
 
 
 __VPC Peering__
@@ -1884,217 +2269,6 @@ __Pricing__
 - __Good for:__
   - HTTP use cases that require static IP addresses or fast regional failover
 
-# Decoupling applications
-
-- Synchronous between applications can be problematic if there are sudden spikes of traffic
-- What if you need to suddenly encode 1000 videos but usually it’s 10?
-- In that case, it’s better to decouple your applications:
-  - using SQS: queue model
-  - using SNS: pub/sub model
-  - using Kinesis: real-time streaming model 
-- These services can scale independently from our application 
-
-## SQS 
-For Simple Notification Service
-- Used to asynchronously decouple applications
-- Supports multiple producers & consumers
-- The message is persisted in SQS until a consumer deletes it
-- The consumer polls the queue for messages. Once a consumer processes a message, it __deletes__ it from the queue using __DeleteMessage API__.
-- __Max message size: 256KB__
-- __Default message retention: 4 days (max: 14 days)__
-- __Consumers could be EC2 instances or Lambda functions, Kinesis__
-
- ### Queue Types
- 
- ### Standard Queue
- - Unlimited throughput (publish any number of message per second into the queue)
- - Low latency (<10 ms on publish and receive)
- - Can have duplicate messages (at least once delivery)
- - Can have out of order messages (best effort ordering)
- 
- ### FIFO Queue
- 
- - Limited throughput: 300 msg/s without batching, 3000 msg/s with
- - Messages are processed in order by the consumer
- - __Message De-duplication__:
-   - __De-duplication interval__: 5 min (duplicate messages will be discarded only if they are sent less than 5 mins apart)
-   - __De-duplication methods__:
-     - __Content-based de-duplication__: computes the hash of the message body and compares
-     - __Using a message de-duplication ID__: messages with the same __de-duplication ID__ are considered duplicates
- - __Message Grouping__
-   - Group messages based on __MessageGroupID__ to send them to different consumers
-   - Same value for __MessageGroupID__
-     - All the messages are in order
-     - Single consumer
-   - Different values for MessageGroupID
-     - Messages will be ordered for each group ID
-     - Ordering across groups is not guaranteed(messages that belong to different message groups)
-     - Each group ID can have a different consumer (parallel processing)
-     
- ### Consumer Auto Scaling
- 
- We can attach an ASG to the consumer instances which will scale based on the CW metric __Queue Length__(ApproximateNumberOfMessages)
- CW alarms can be triggered to step scale the consumer application.
- 
- ### Security
- 
- __Encryption__
- - In-flight encryption using HTTPS API
- - At-rest encryption using KMS keys
- - Client-side encryption if the client wants to perform encryption/decryption itself 
- 
- __Access Controls__ : IAM policies to regulate access to the SQS API
- 
- __SQS Access Policies(resource based policy)__
-   - Useful for cross-account access to SQS queues
-   - Useful for allowing other services (SNS, S3…) to write to an SQS queue
- 
- ### Configurations
- __Message Visibility Timeout__
- - After a message is polled by a consumer, it becomes __invisible__ to other consumers
- - By default, the “message visibility timeout” is __30 seconds__
- - That means the message has __30 seconds__ to be processed
- - After the message visibility timeout is over, the message is “visible” in SQS
- - A consumer could call the __ChangeMessageVisibility__ API to get more time
- - If visibility timeout is high (hours), and consumer crashes, re-processing will take time
- - If visibility timeout is too low (seconds), we may get duplicates
- 
- ![image](https://user-images.githubusercontent.com/35028407/225288979-b11b0e56-47cf-4017-9118-cad881cb83f8.png)
-
-
-__Dead Letter Queue (DLQ)__
-- An SQS queue used to store failing to be processed messages in another queue
-- After the __MaximumReceives__(the number of times that a message can be received before being sent to a dead-letter queue) threshold is exceeded, the message goes into the DLQ
-- __Redrive to Source__ - once the bug in the consumer has been resolved, messages in the DLQ can be sent back to the queue (original queue or a custom queue) for processing
-- Prevents resource wastage
-- Recommended to set a high retention period for DLQ (14 days)
-
-__Queue Delay/Delivery Delay__
- - Delay message delivery
-- Consumers see the message after some delay
-- Default: 0 (Max: 15 min)
-- Can be set at the queue level
-
-__Long Polling__
-
-- When a consumer requests messages from the queue, it can optionally “wait” for messages to arrive if there are none in the queue
-- This is called Long Polling
-- Decreases the number of API calls made to __SQS (cheaper)__
-- Reduces latency (incoming messages during the polling will be read instantaneously)
-- Polling time: 1 sec to 20 sec
-- Long Polling is preferred over Short Polling
-- Can be enabled at the queue level or at the consumer level by using __WaitTimeSeconds__ parameter in__ ReceiveMessage__ API.
-
-__SQS + Lambda + DLQ__
-
-Failed messages (after the set number of retries) are sent to the DLQ by the SQS queue
-![image](https://user-images.githubusercontent.com/35028407/225288575-42fd9606-21e8-4012-a7d4-51d6b51ac450.png)
-
-
-## SNS
-For SNS for Simple Queue Service
-- Pub-Sub model (publisher publishes messages to a topic, subscribers listen to the topic)
-- Instant message delivery (does not queue messages)
-
-__Security__
-
-__Encryption__
- - In-flight encryption using HTTPS API
- - At-rest encryption using KMS keys
- - Client-side encryption if the client wants to perform encryption/decryption itself 
- 
-__Access Controls__ : IAM policies to regulate access to the SNS API
- 
-__SNS Access Policies(resource based policy)__
- - Useful for cross-account access to SNS queues
- - Useful for allowing other services (S3…) to write to an SNS queue
- 
- __Standard Topics__
- - Highest throughput
- - At least once message delivery
- - Best effort ordering
- - Subscribers can be:
-   - SQS queue
-   - HTTP / HTTPS endpoints
-   - Lambda functions
-   - Emails (using SNS)
-   - SMS & Mobile Notifications
-   - Kinesis Data Firehose (KDF) to send the data into S3 or Redshift
-
-__FIFO Topics__
-  - Guaranteed ordering of messages in that topic
-  - Publishing messages to a FIFO topic requires:
-    - __Ordering__ by Message Group ID (all messages in the same group are ordered)
-    - __Deduplication using__ a Deduplication ID or Content Based Deduplication
-  - Can only have SQS FIFO queues as subscribers
-  - __Limited throughput__ (same as SQS FIFO) because only SQS FIFO queues can read from FIFO topics
-  
-  __SNS + SQS Fanout Pattern__
-  
-  - Fully decoupled, no data loss
-  - SQS allows for: data persistence, delayed processing and retries of work
-  - Make sure your SQS queue access policy allows for SNS to write
-  
-  ![image](https://user-images.githubusercontent.com/35028407/225294978-dfb124e9-1b77-4355-bed4-b6569b7b68ba.png)
-
-  
-## Kinesis
-- Makes it easy to collect, process, and analyze streaming data in real-time
-- Ingest real-time data such as: Application logs, Metrics, Website clickstreams,
-IoT telemetry data…
-
-### Kinesis Data Streams 
-- Real-time data streaming service
-- __Used to ingest data in real time directly from source__
-- Retention between 1 day to 365 days
-- Ability to reprocess (replay) data
-- Once data is inserted in Kinesis, it can’t be deleted (immutability)
-- Data that shares the same partition goes to the same shard (ordering)
-- Producers: AWS SDK, Kinesis Producer Library (KPL), Kinesis Agent
-- Consumers:
-    - Write your own: Kinesis Client Library (KCL), AWS SDK
-    - Managed: AWS Lambda, Kinesis Data Firehose, Kinesis Data Analytics, 
-  
-- __Capacity Modes__
-  - __Provisioned__
-   - You choose the number of shards provisioned, scale manually or using API
-   - Each shard gets 1MB/s in (or 1000 records per second)
-   - Each shard gets 2MB/s out (classic or enhanced fan-out consumer)
-   - You pay per shard provisioned per hour
-  - __On-demand mode__
-   - No need to provision or manage the capacity
-   - Default capacity provisioned (4 MB/s in or 4000 records per second)
-   - Scales automatically based on observed throughput peak during the last 30 days
-   - Pay per stream per hour & data in/out per GB
-  
-  ![image](https://user-images.githubusercontent.com/35028407/225446271-ac6c3c50-515f-4fbe-afcd-5727bfdff773.png)
-
-### Amazon MQ
-
-- If you have some traditional applications running from on-premise, they may use open protocols such as __MQTT, AMQP, STOMP, Openwire, WSS, etc__. When migrating to the cloud, instead of re-engineering the application to use SQS and SNS (AWS proprietary), we can use Amazon MQ (managed Apache ActiveMQ) for communication. 
-- Doesn’t “scale” as much as SQS or SNS because it is provisioned 
-- Runs on a dedicated machine (can run in HA with failover)
-- __Has both queue feature (SQS) and topic features (SNS)__
- 
-### Kinesis Data Firehose 
-
-- Fully Managed Service, no administration, automatic scaling, serverless
-- Used to load streaming data into a target location with optional transformation
-- Can ingest data in real time directly from source
-- Destinations:
-  - __AWS: Redshift, S3, OpenSearch__
-  - 3rd party: Splunk, MongoDB, DataDog, NewRelic, etc.
-  - Custom HTTP endpoint
-  - Supports custom data transformation using Lambda functions
-  - No replay capability (does not store data like KDS)
-
-![image](https://user-images.githubusercontent.com/35028407/225447015-a7b9e3ee-e23a-48eb-81ca-2f85b8eeba66.png)
-
-
-### Event Bridge
-- __Schedule or Cron__ to create events on a schedule
-- __Event Pattern__: Event rules to react to a service doing something
-- Trigger Lambda functions, send SQS/SNS messages
 
 # Migration & Transfer
 
@@ -2360,177 +2534,6 @@ __Same process with PostgreSQL__
 - Read and process any type of document (PDFs, images, …)
 
 
-# Data & Analytics
-
-## Athena
-
-- Serverless query service to analyze data stored in Amazon S3
-- Uses __SQL__ language to query the files
-- Built on Presto engine
-- Output stored in S3
-- Supports CSV, JSON, ORC, Avro, and Parquet file format
-- Commonly used with Amazon Quicksight for reporting/dashboards
-
-__Performance__
- - Use __columnar data__ for cost-savings (less scan)
- - __Compress data__ for smaller retrievals (bzip2, gzip, lz4, snappy, zlip, zstd…)
- - Partition datasets in S3 for easy querying on virtual columns
-
-__Amazon Athena – Federated Query__
-- Allows you to run SQL queries across data stored in relational, non-relational, object, and custom data sources (AWS or on-premises)
-- Store the results back in Amazon S3
-
-# Redshift
-- AWS managed __data warehouse__ (10x better performance than other data warehouses)
-- Based on __PostgreSQL__
-- Used for __Online Analytical Processing (OLAP)__ and high performance querying
-- __Columnar storage__ of data with __massively parallel query execution__ in __SQL__
-- Faster querying than __Athena__ due to indexes
-- Need to provision instances as a part of the Redshift cluster (pay for the instances provisioned)
-- Integrated with Business Intelligence (BI) tools such as __QuickSight or Tableau__
-- Redshift Cluster can have __1 to 128 nodes (128TB per node)__
-  - __Leader Node__: query planning & result aggregation 
-  - __Compute Nodes__: execute queries & send the result to leader node
-
-- No multi-AZ support (all the nodes will be in the same AZ)
-
-__Loading data into Redshift__
-
-- __S3__
-  - Use __COPY command__ to load data from an S3 bucket into Redshift 
-  - __Without Enhanced VPC Routing__
-    - data goes through the public internet
-  - __Enhanced VPC Routing__
-    - data goes through the VPC without traversing the public internet
-- __Kinesis Data Firehose__
-  - Sends data to __S3__ and issues a __COPY command__ to load it into Redshift   
-- __EC2 Instance__
-  - Using __JDBC driver__
-  - Used when an application needs to write data to Redshift
-  - Optimal to write data in batches 
-
-__Snapshots & DR__
-- Snapshots are point-in-time backups of a cluster, stored internally in S3
-- Snapshots are incremental (only what has changed is saved)
-- You can restore a snapshot into a __new cluster__
-- __Automated__
-  - every 8 hours, every 5 GB, or on a schedule
-  - Set retention between 1 to 35 days
-- __Manual__
-  - snapshot is retained until you delete it  
-
-- __Feature to automatically copy snapshots into another region__
-
-__Redshift Spectrum__
-- Query data present in S3 without loading it into Redshift
-- Need to have a Redshift cluster to use this feature
-- Query is executed by 1000s of Redshift Spectrum nodes
-- Consumes much less of your cluster's processing capacity than other queries
-
-## OpenSearch
-
-- Amazon OpenSearch is successor to __Amazon ElasticSearch__
-- Used in combination with a database to perform __search operations on the database__
-- Can search on any field, even supports __partial matches__
-- Need to provision a cluster of instances (pay for provisioned instances)
-- Supports Multi-AZ
-- Used in Big Data
-- Security through Cognito & IAM, KMS encryption, TLS
-- Comes with __Kibana__ (visualization) & __Logstash__ (log ingestion)
-
-## EMR
-
-- EMR stands for “Elastic MapReduce”
-- EMR helps creating __Hadoop clusters (Big Data)__ to analyze and process vast amount of data  
-- The clusters can be made of __hundreds of EC2 instances__
-- EMR comes bundled with __Apache Spark, HBase, Presto, Flink…__
-- EMR takes care of all the __provisioning and configuration__
-- __Auto-scaling__
-- Integrated with __Spot Instances__
-
-## QuickSight
-
-- __Serverless machine learning-powered business intelligence service to create interactive dashboards__
-- Fast, automatically scalable, embeddable
-- Use cases:
-  - Business analytics
-  - Building visualizations
-  - Get business insights using data
-- Integrated with :
-  - RDS
-  - Aurora
-  - Athena
-  - Redshift
-  - S3
-
-# Glue
-
-- Managed __extract, transform, and load (ETL)__ service
-- Useful to prepare and transform data for __analytics__
-- Fully __serverless__ service 
-
-![image](https://user-images.githubusercontent.com/35028407/226724824-88501505-8756-4bc0-b00a-6fa512a75b61.png)
-
-- Used to get data from a store, process and put it in another store (could be the same store)
-- __Glue Job Bookmarks__: prevent re-processing old data
-- __Glue Data Crawlers__ crawl databases and collect metadata which is populated in Glue Data Catalog
-- Data lake is stored into S3
-
-# Lake Formation 
-
-- __Data lake = central place to have all your data for analytics purpose__
-- Fully managed service that makes it easy to setup a __data lake__ in days
-- Out-of-the-box source __blueprints__: S3, RDS, Relational & NoSQL DB…
-- __Fine-grained Access Control for your applications (row and column-level)__
-
-
-## Kinesis Data analytics
-
-__Kinesis Data Analytics (SQL application)__
-- Real-time analytics on __Kinesis Data Streams__ & __Firehose__ using SQL
-- Add reference data from Amazon S3 to enrich streaming data
-- Fully managed, no servers to provision
-- Automatic scaling
-- __Output__
-  - Kinesis Data Streams: create streams out of the real-time analytics queries 
-  - Kinesis Data Firehose: send analytics query results to destinations
-- __Use cases:__
-  - Time-series analytics
-  - Real-time dashboards  
-  - Real-time metrics
-
-![image](https://user-images.githubusercontent.com/35028407/226729226-bad6dbde-3ed8-42b3-af2a-af867ffdd6f0.png)
-
-__Kinesis Data Analytics for Apache Flink__
-- Use Flink (Java, Scala or SQL) to process and analyze streaming data
-- Use any Apache Flink programming features
-- Flink does not read from Firehose (use Kinesis Analytics for SQL instead)
-- SOurce :
-  - Kinesis Data Streams 
-  - Amazon MSK
-
-
-# MSK Managed Streaming for Apache Kafka
-
-- Alternative to Amazon Kinesis both allow to stream data
-- Fully managed Apache Kafka on AWS
-  - Allow you to create, update, delete clusters
-  - MSK creates & manages Kafka brokers nodes & Zookeeper nodes for you
-  - Deploy the MSK cluster in your VPC, multi-AZ (up to 3 for HA)
-  - Data is stored on EBS volumes for as long as you want 
-
-__MSK Serverless__
-
-- Run Apache Kafka on MSK without managing the capacity
-- MSK automatically provisions resources and scales compute & storage
-
-# Big Data Ingestion Pipeline
-- We want the ingestion pipeline to be fully serverless
-- We want to collect data in real time
-- We want to transform the data
-- We want to query the transformed data using SQL
-- The reports created using the queries should be in S3
-- We want to load that data into a warehouse and create dashboards
 
 # Monitoring & Audit
 
