@@ -366,12 +366,40 @@ __Networking__
 - Launch Docker containers on AWS = Launch __ECS Tasks__ on __ECS Clusters__
 - __EFS__ is used as persistent multi-AZ shared storage for ECS tasks
 
+__ECS Componenets__
+- __Clusters__
+  - An Amazon ECS cluster is a logical grouping of __asks or services__.
+  - You can use clusters to isolate your applications, This way, they don't use the same underlying infrastructure
+  - When your tasks are run on Fargate, your cluster resources are also managed by Fargate 
+- __Task definitions__
+  - A task definition is a text file that describes one or more containers that form your application 
+  - __It's in JSON format__
+  - You can use it to describe up to a maximum of ten containers
+  - The task definition functions as a blueprint for your application
+  - AWS recommend spanning your application __across multiple task definitions__
+  - __parameters__
+    - Docker image
+    - CPU and memory 
+    - The command that the container runs when it's started
+    - Data volumes that are used with the containers in the task 
+    - The IAM role that your tasks use
+- __Services__
+  - You can use an Amazon ECS service to run and maintain your desired number of tasks simultaneously in an Amazon ECS cluster 
+  - If any of your tasks fail or stop for any reason, the Amazon ECS service scheduler launches another instance based on your task definition.
+  - __Parameters__
+    - Cluster 
+    - Task definition
+    - Capacity provider
+    - Client token
+     
+
+
 __Launch Types__
 
 __EC2 Launch Type__
 - __Not Serverless__
 - __you must provision & maintain the infrastructure (the EC2 instances)__
-- EC2 instances have __ECS agent__ running on them as a __docker container__
+- EC2 instances have __ECS agent__ to register in the ECS Cluster 
 - AWS takes care of starting / stopping containers
 
 __Fargate Launch Type__
@@ -384,14 +412,14 @@ __Fargate Launch Type__
 __IAM Roles for ECS__
 - __EC2 Instance Profile (EC2 Launch Type only):__
   - Used by the ECS agent
-  - Makes API calls to ECS servic
+  - Makes API calls to ECS service
   - Pull Docker image from ECR
   - Reference sensitive data in Secrets Manager or SSM Parameter Store
-- __ECS Task Role:__
+- __ECS Task Role(Both EC2 launch type and Fargate):__
   - Allows ECS tasks to access AWS resources
   - Each task can have a separate role
   - Use different roles for the different ECS Services
-  - Task Role is defined in the task definition
+  - Task Role is defined in the __task definition__
 
 __Data Volumes (EFS)__
 - Mount EFS file systems onto ECS tasks
@@ -402,7 +430,6 @@ __Data Volumes (EFS)__
 
 __ECS Service Auto Scaling__
 - Automatically increase/decrease the desired number of ECS tasks
-- Amazon ECS Auto Scaling type:
 - Amazon ECS Auto Scaling uses __AWS Application Auto Scaling__
   - Metric :
     - ECS Service Average CPU Utilization
@@ -423,9 +450,9 @@ __EC2 Launch Type – Auto Scaling EC2 Instances__
   -  __Auto Scaling Group__ Scaling 
     - Scale your ASG based on CPU Utilization
     - Add EC2 instances over time
-  - __ECS Cluster Capacity Provider__
+  - __ECS Cluster Capacity Provider(new and more advance)__
     - Used to automatically provision and scale the infrastructure for your ECS Tasks
-    - Capacity Provider paired with an Auto Scaling Group
+    - Capacity Provider paired with an __Auto Scaling Group__
     - Add EC2 Instances when you’re missing capacity (CPU, RAM…)  
 
 
