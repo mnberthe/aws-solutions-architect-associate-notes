@@ -59,7 +59,7 @@
 - [RDS and Aurora MySQL Migrations](#rds-and-aurora-mysql-migrations)
 
 ### Disaster Recovery 
-- [Disaster Recovery](#disaster-recovery)
+- [RPO and RTO](#rpo-and-rto)
 
 ### Machine Learning
 - [Rekognition](#rekognition)
@@ -1745,6 +1745,271 @@ __MSK Serverless__
 - We want to load that data into a warehouse and create dashboards
 
 
+
+# Migration & Transfer
+
+## Snow Family
+
+- Highly-secure, portable devices to __collect and process data__ at the edge, and __migrate data into and out of AWS__
+-  Offline devices to perform data migrations
+- If it takes more than a week to transfer over the network, use Snowball devices!
+
+__Device__
+
+- __Snowcone__
+  - 2 CPUs, 4GB RAM, wired or wireless access
+  - __8 TB storage__
+  - Good for space-constrained environment
+  - __DataSync Agent__ is preinstalled
+  - When to use: __Up to 24 TB, online and offline__
+
+- __Snowball Edge__
+  - __Compute Optimized__
+    - 52 vCPUs, 208 GB of RAM
+    - __42 TB storage__
+    - Supports Storage Clustering
+  - __Storage Optimized__
+    - Up to 40 CPUs, 80 GB of RAM 
+    - __80 TB storage__
+    - Supports Storage Clustering (up to 15 nodes)
+    - Transfer up to petabytes
+  - __When to use: Up to petabytes(PB)__
+   
+- __Snowmobile__
+  - __100 PB storage__
+  - Used when __transferring > 10PB__
+  - Transfer up to exabytes
+  - Does not support Storage Clustering
+  - __When to use: Up to exabytes(EB)__
+
+
+__Edge Computing__
+
+- Process data while it’s being created on an edge location (could be anything that doesn’t have internet or access to cloud)
+- Devices for edge computing:
+  - Snowcone
+  - Snowball Edge 
+
+__Data migration__
+
+   - Physical data transport solution: __move TBs or PBs__ of data in or out of AWS 
+   - Pay per data transfer job
+   - Provide block storage and Amazon S3 compatible object storage
+   - __Snowball cannot import to Glacier directly__ (transfer to S3, configure a lifecycle policy to transition the data into Glacier)
+   - Need to install __OpsHub__ software on your computer to manage Snow Family devices
+ 
+## DataSync
+
+- Move large amount of data to and from 
+  - On-premises / other cloud to AWS (NFS, SMB, HDFS, S3 API…) – needs agent
+  - AWS to AWS (different storage services) – no agent needed
+  - Can synchronize to:
+    - Amazon S3 (any storage classes – including Glacier)
+    - Amazon EFS
+    - Amazon FSx (Windows, Lustre, NetApp, OpenZFS...)
+  -  Replication tasks can be scheduled hourly, daily, weekly
+  - __File permissions and metadata are preserved (NFS POSIX, SMB…)__
+ 
+ ![image](https://user-images.githubusercontent.com/35028407/226283193-8d5cd915-7248-4a8d-ad47-3ca555db377b.png)
+
+ 
+## Transfer Family
+
+- AWS managed service to transfer files in and out of Simple Storage Service (S3) or EFS using FTP (instead of using proprietary methods)
+- Supported Protocols
+  - FTP (File Transfer Protocol) - unencrypted in flight
+  - FTPS (File Transfer Protocol over SSL) - encrypted in flight
+  - SFTP (Secure File Transfer Protocol) - encrypted in flight 
+  
+- Supports Multi AZ
+- Pay per provisioned endpoint per hour + fee per GB data transfers
+- Clients can either connect directly to the FTP endpoint or optionally through Route 53
+- Transfer Family will need permission(IAM roleà)- to read or put data into S3 or EFS
+
+## Database Migration Service
+- Migrate entire __databases__ from on-premises to __AWS cloud__
+- __The source database remains available during migration__
+- Continuous Data Replication using __CDC (change data capture)__
+- Requires __EC2 instance running the DMS software__ to perform the replication tasks. If the amount of data is large, use a large instance. If multi-AZ is enabled, need an instance in each AZ.
+
+__Types of Migration__
+
+__Homogeneous Migration__
+ - When the source and target DB engines are the same (eg. Oracle to Oracle)
+ - One step process:
+   - Use the __Database Migration Service (DMS)__ to migrate data from the source database to the target database 
+ 
+__Heterogeneous Migration__
+  - When the source and target DB engines are different (eg. Microsoft SQL Server to Aurora)
+  - Two step proces:
+    - Use the __Schema Conversion Tool (SCT)__ to convert the source schema and code to match that of the target database 
+    - Use the __Database Migration Service (DMS)__ to migrate data from the source database to the target database
+
+__Migrating using Snow Family__
+
+- Use the Schema Conversion Tool (SCT) to extract the data locally and move it to the Edge device
+- Ship the Edge device or devices back to AWS
+- After AWS receives your shipment, the Edge device automatically loads its data into an Amazon S3 bucket.
+- AWS DMS takes the files and migrates the data to the target data store (eg. DynamoDB)
+
+# Application migration service
+
+__AWS Application Discovery Service__
+- Plan migration projects by gathering information about on-premises data centers
+- Server utilization data and dependency mapping are important for migrations
+- Two types of migration:
+  - __Agentless Discovery (AWS Agentless Discovery Connector)__
+    - VM inventory, configuration, and performance history such as CPU, memory, and disk usage
+  - __Agent-based Discovery (AWS Application Discovery Agent)__
+    - System configuration, system performance, running processes, and details of the network connections between systems    
+- Resulting data can be viewed within AWS Migration Hub 
+
+__AWS Application Migration Service__
+- Lift-and-shift (rehost) solution which simplify migrating applications to AWS
+- Converts your physical, virtual, and cloud-based servers to run natively on AWS
+- Supports wide range of platforms, Operating Systems, and databases
+- Minimal downtime, reduced costs
+
+<img width="1111" alt="Capture d’écran 2023-03-25 à 12 51 14" src="https://user-images.githubusercontent.com/35028407/227715832-b76e2fc2-1e1c-455e-b4f2-29a120628f97.png">
+
+
+
+# RDS and Aurora MySQL Migrations
+
+__RDS MySQL to Aurora MySQL__
+ - __Option 1__: DB Snapshots from RDS MySQL restored as MySQL Aurora DB
+ - __Option 2__: Create an Aurora Read Replica from your RDS MySQL, and when the replication lag is 0, promote it as its own DB cluster (can take time and cost $)
+
+__External MySQL to Aurora MySQL__
+
+- __Option 1__: 
+  - Use Percona XtraBackup to create a file backup in Amazon S3
+  - Create an Aurora MySQL DB from Amazon S3
+- __Option 2__:
+  - Create an Aurora MySQL DB
+  - Use the mysqldump utility to migrate MySQL into Aurora (slower than S3 method)
+
+__Use DMS if both databases are up and running__
+
+__Same process with PostgreSQL__
+
+
+# Disaster Recovery
+
+## RPO and RTO
+
+- Any event that has a negative impact on a company’s business continuity or finances is a disaster
+- __Recovery Point Objective (RPO)__: how often you backup your data (determines how much data are you willing to lose in case of a disaster)
+- __Recovery Time Objective (RTO)__: how long it takes to recover from the disaster (down time)
+
+
+![image](https://user-images.githubusercontent.com/35028407/227709642-9f16d5fc-c0aa-4994-9f8e-cc863ffe69af.png)
+
+
+  __Strategies__
+  
+  - __Backup & Restore__
+    - High RPO (hours)
+    - Need to spin up instances and restore volumes from snapshots in case of disaster => High RTO 
+    - Cheapest & easiest to manage
+  - __Pilot Light__
+    - __Critical parts of the app are always running__ in the cloud (eg. continuous replication of data to another region)
+    - Low RPO (minutes)
+    - Critical systems are already up => Low RTO
+    - Ideal when RPO should be in minutes and the solution should be inexpensive
+    - DB is critical so it is replicated continuously but EC2 instance is spin up only when a disaster strikes
+  - __Warm Standby__
+    - A complete backup system is up and running at the minimum capacity. This system is quickly scaled to production capacity in case of a disaster.
+    - Very low RPO & RTO (minutes)
+    - Expensive
+  - __Multi-Site or Hot Site Approach__
+    - A backup system is running at full production capacity and the request can be routed to either the main or the backup system. 
+    - Multi-data center approach
+    - Lowest RPO & RTO (minutes or seconds)
+    - Very Expensive
+   
+
+# Machine Learning
+
+## Rekognition
+
+- Find __objects, people, text, scenes__ in __images and videos__ using ML
+- __Facial analysis__ and __facial search__ to do user verification, people counting:
+- Use cases
+  - Content Moderation
+  - Text Detection 
+  - Face Detection and Analysis (gender, age range, emotions…)
+  - Face Search and Verification
+  - Celebrity Recognition
+  - Detect content that is inappropriate, unwanted, or offensive (image and videos)
+  - Used in social media, broadcast media, advertising, and e-commerce situations to create a safer user experience
+
+# Transcribe
+
+- Automatically __convert speech to text__
+- Automatically remove __Personally Identifiable Information (PII)__ using Redaction
+- Use cases: 
+  - transcribe customer service calls
+  - automate closed captioning and subtitling
+
+# Polly
+
+- Turn __text__ into __lifelike speech__ using deep learning
+- Allowing you to create applications that talk
+
+# Translate
+
+- Natural and accurate __language translation__
+
+# Lex
+- __Amazon Lex__
+  - same technology that powers Alexa
+  - Automatic Speech Recognition (ASR) to convert speech to text
+  - __Natural Language Understanding to recognize the intent of text, callers__
+  - Helps build chatbots, call center bots
+- __Amazon Connect__
+  - Receive calls, create contact flows, cloud-based __virtual contact center__
+  - Can integrate with other CRM systems or AWS  
+
+# Comprehend
+- For __Natural Language Processing – NLP__
+- Fully managed and serverless service
+- Uses machine learning to find insights and relationships in text
+
+
+# Comprehend Medical
+
+- Amazon Comprehend Medical detects and returns useful information in unstructured __clinical text__
+- Uses __NLP__ to detect __Protected Health Information__ (PHI)
+
+
+# SageMaker
+- Fully managed service for __developers / data scientists__ to build __ML models__
+- Typically, difficult to do all the processes in one place + provision servers
+- Machine learning process (simplified): predicting your exam score
+
+# Forecast
+
+- Fully managed service that uses ML to deliver __highly accurate forecasts__
+- Example: predict the future sales of a raincoat
+- Use cases: Product Demand Planning, Financial Planning, Resource Planning
+
+# Kendra
+- Fully managed __document search__ service powered by Machine Learning
+- Extract answers from within a __document (text, pdf, HTML, PowerPoint, MS Word, FAQs…)__
+
+# Personalize
+
+- Fully managed __ML-service__ to build apps with real-time personalized __recommendations__
+- Same technology used by Amazon.com
+- Integrates into existing websites, applications, SMS, email marketing systems, …
+
+# Textract
+
+- Automatically __extracts text__, handwriting, and data from any scanned documents using AI and ML
+- Read and process any type of document (PDFs, images, …)
+
+
 # Networking
 
 ## VPC
@@ -2268,270 +2533,6 @@ __Pricing__
 
 - __Good for:__
   - HTTP use cases that require static IP addresses or fast regional failover
-
-
-# Migration & Transfer
-
-## Snow Family
-
-- Highly-secure, portable devices to __collect and process data__ at the edge, and __migrate data into and out of AWS__
--  Offline devices to perform data migrations
-- If it takes more than a week to transfer over the network, use Snowball devices!
-
-__Device__
-
-- __Snowcone__
-  - 2 CPUs, 4GB RAM, wired or wireless access
-  - __8 TB storage__
-  - Good for space-constrained environment
-  - __DataSync Agent__ is preinstalled
-  - When to use: __Up to 24 TB, online and offline__
-
-- __Snowball Edge__
-  - __Compute Optimized__
-    - 52 vCPUs, 208 GB of RAM
-    - __42 TB storage__
-    - Supports Storage Clustering
-  - __Storage Optimized__
-    - Up to 40 CPUs, 80 GB of RAM 
-    - __80 TB storage__
-    - Supports Storage Clustering (up to 15 nodes)
-    - Transfer up to petabytes
-  - __When to use: Up to petabytes(PB)__
-   
-- __Snowmobile__
-  - __100 PB storage__
-  - Used when __transferring > 10PB__
-  - Transfer up to exabytes
-  - Does not support Storage Clustering
-  - __When to use: Up to exabytes(EB)__
-
-
-__Edge Computing__
-
-- Process data while it’s being created on an edge location (could be anything that doesn’t have internet or access to cloud)
-- Devices for edge computing:
-  - Snowcone
-  - Snowball Edge 
-
-__Data migration__
-
-   - Physical data transport solution: __move TBs or PBs__ of data in or out of AWS 
-   - Pay per data transfer job
-   - Provide block storage and Amazon S3 compatible object storage
-   - __Snowball cannot import to Glacier directly__ (transfer to S3, configure a lifecycle policy to transition the data into Glacier)
-   - Need to install __OpsHub__ software on your computer to manage Snow Family devices
- 
-## DataSync
-
-- Move large amount of data to and from 
-  - On-premises / other cloud to AWS (NFS, SMB, HDFS, S3 API…) – needs agent
-  - AWS to AWS (different storage services) – no agent needed
-  - Can synchronize to:
-    - Amazon S3 (any storage classes – including Glacier)
-    - Amazon EFS
-    - Amazon FSx (Windows, Lustre, NetApp, OpenZFS...)
-  -  Replication tasks can be scheduled hourly, daily, weekly
-  - __File permissions and metadata are preserved (NFS POSIX, SMB…)__
- 
- ![image](https://user-images.githubusercontent.com/35028407/226283193-8d5cd915-7248-4a8d-ad47-3ca555db377b.png)
-
- 
-## Transfer Family
-
-- AWS managed service to transfer files in and out of Simple Storage Service (S3) or EFS using FTP (instead of using proprietary methods)
-- Supported Protocols
-  - FTP (File Transfer Protocol) - unencrypted in flight
-  - FTPS (File Transfer Protocol over SSL) - encrypted in flight
-  - SFTP (Secure File Transfer Protocol) - encrypted in flight 
-  
-- Supports Multi AZ
-- Pay per provisioned endpoint per hour + fee per GB data transfers
-- Clients can either connect directly to the FTP endpoint or optionally through Route 53
-- Transfer Family will need permission(IAM roleà)- to read or put data into S3 or EFS
-
-## Database Migration Service
-- Migrate entire __databases__ from on-premises to __AWS cloud__
-- __The source database remains available during migration__
-- Continuous Data Replication using __CDC (change data capture)__
-- Requires __EC2 instance running the DMS software__ to perform the replication tasks. If the amount of data is large, use a large instance. If multi-AZ is enabled, need an instance in each AZ.
-
-__Types of Migration__
-
-__Homogeneous Migration__
- - When the source and target DB engines are the same (eg. Oracle to Oracle)
- - One step process:
-   - Use the __Database Migration Service (DMS)__ to migrate data from the source database to the target database 
- 
-__Heterogeneous Migration__
-  - When the source and target DB engines are different (eg. Microsoft SQL Server to Aurora)
-  - Two step proces:
-    - Use the __Schema Conversion Tool (SCT)__ to convert the source schema and code to match that of the target database 
-    - Use the __Database Migration Service (DMS)__ to migrate data from the source database to the target database
-
-__Migrating using Snow Family__
-
-- Use the Schema Conversion Tool (SCT) to extract the data locally and move it to the Edge device
-- Ship the Edge device or devices back to AWS
-- After AWS receives your shipment, the Edge device automatically loads its data into an Amazon S3 bucket.
-- AWS DMS takes the files and migrates the data to the target data store (eg. DynamoDB)
-
-# Application migration service
-
-__AWS Application Discovery Service__
-- Plan migration projects by gathering information about on-premises data centers
-- Server utilization data and dependency mapping are important for migrations
-- Two types of migration:
-  - __Agentless Discovery (AWS Agentless Discovery Connector)__
-    - VM inventory, configuration, and performance history such as CPU, memory, and disk usage
-  - __Agent-based Discovery (AWS Application Discovery Agent)__
-    - System configuration, system performance, running processes, and details of the network connections between systems    
-- Resulting data can be viewed within AWS Migration Hub 
-
-__AWS Application Migration Service__
-- Lift-and-shift (rehost) solution which simplify migrating applications to AWS
-- Converts your physical, virtual, and cloud-based servers to run natively on AWS
-- Supports wide range of platforms, Operating Systems, and databases
-- Minimal downtime, reduced costs
-
-<img width="1111" alt="Capture d’écran 2023-03-25 à 12 51 14" src="https://user-images.githubusercontent.com/35028407/227715832-b76e2fc2-1e1c-455e-b4f2-29a120628f97.png">
-
-
-
-# RDS and Aurora MySQL Migrations
-
-__RDS MySQL to Aurora MySQL__
- - __Option 1__: DB Snapshots from RDS MySQL restored as MySQL Aurora DB
- - __Option 2__: Create an Aurora Read Replica from your RDS MySQL, and when the replication lag is 0, promote it as its own DB cluster (can take time and cost $)
-
-__External MySQL to Aurora MySQL__
-
-- __Option 1__: 
-  - Use Percona XtraBackup to create a file backup in Amazon S3
-  - Create an Aurora MySQL DB from Amazon S3
-- __Option 2__:
-  - Create an Aurora MySQL DB
-  - Use the mysqldump utility to migrate MySQL into Aurora (slower than S3 method)
-
-__Use DMS if both databases are up and running__
-
-__Same process with PostgreSQL__
-
-
-# Disaster Recovery
-
-## Disaster Recovery
-
-- Any event that has a negative impact on a company’s business continuity or finances is a disaster
-- __Recovery Point Objective (RPO)__: how often you backup your data (determines how much data are you willing to lose in case of a disaster)
-- __Recovery Time Objective (RTO)__: how long it takes to recover from the disaster (down time)
-
-
-![image](https://user-images.githubusercontent.com/35028407/227709642-9f16d5fc-c0aa-4994-9f8e-cc863ffe69af.png)
-
-
-  __Strategies__
-  
-  - __Backup & Restore__
-    - High RPO (hours)
-    - Need to spin up instances and restore volumes from snapshots in case of disaster => High RTO 
-    - Cheapest & easiest to manage
-  - __Pilot Light__
-    - __Critical parts of the app are always running__ in the cloud (eg. continuous replication of data to another region)
-    - Low RPO (minutes)
-    - Critical systems are already up => Low RTO
-    - Ideal when RPO should be in minutes and the solution should be inexpensive
-    - DB is critical so it is replicated continuously but EC2 instance is spin up only when a disaster strikes
-  - __Warm Standby__
-    - A complete backup system is up and running at the minimum capacity. This system is quickly scaled to production capacity in case of a disaster.
-    - Very low RPO & RTO (minutes)
-    - Expensive
-  - __Multi-Site or Hot Site Approach__
-    - A backup system is running at full production capacity and the request can be routed to either the main or the backup system. 
-    - Multi-data center approach
-    - Lowest RPO & RTO (minutes or seconds)
-    - Very Expensive
-   
-
-# Machine Learning
-
-## Rekognition
-
-- Find __objects, people, text, scenes__ in __images and videos__ using ML
-- __Facial analysis__ and __facial search__ to do user verification, people counting:
-- Use cases
-  - Content Moderation
-  - Text Detection 
-  - Face Detection and Analysis (gender, age range, emotions…)
-  - Face Search and Verification
-  - Celebrity Recognition
-  - Detect content that is inappropriate, unwanted, or offensive (image and videos)
-  - Used in social media, broadcast media, advertising, and e-commerce situations to create a safer user experience
-
-# Transcribe
-
-- Automatically __convert speech to text__
-- Automatically remove __Personally Identifiable Information (PII)__ using Redaction
-- Use cases: 
-  - transcribe customer service calls
-  - automate closed captioning and subtitling
-
-# Polly
-
-- Turn __text__ into __lifelike speech__ using deep learning
-- Allowing you to create applications that talk
-
-# Translate
-
-- Natural and accurate __language translation__
-
-# Lex
-- __Amazon Lex__
-  - same technology that powers Alexa
-  - Automatic Speech Recognition (ASR) to convert speech to text
-  - __Natural Language Understanding to recognize the intent of text, callers__
-  - Helps build chatbots, call center bots
-- __Amazon Connect__
-  - Receive calls, create contact flows, cloud-based __virtual contact center__
-  - Can integrate with other CRM systems or AWS  
-
-# Comprehend
-- For __Natural Language Processing – NLP__
-- Fully managed and serverless service
-- Uses machine learning to find insights and relationships in text
-
-
-# Comprehend Medical
-
-- Amazon Comprehend Medical detects and returns useful information in unstructured __clinical text__
-- Uses __NLP__ to detect __Protected Health Information__ (PHI)
-
-
-# SageMaker
-- Fully managed service for __developers / data scientists__ to build __ML models__
-- Typically, difficult to do all the processes in one place + provision servers
-- Machine learning process (simplified): predicting your exam score
-
-# Forecast
-
-- Fully managed service that uses ML to deliver __highly accurate forecasts__
-- Example: predict the future sales of a raincoat
-- Use cases: Product Demand Planning, Financial Planning, Resource Planning
-
-# Kendra
-- Fully managed __document search__ service powered by Machine Learning
-- Extract answers from within a __document (text, pdf, HTML, PowerPoint, MS Word, FAQs…)__
-
-# Personalize
-
-- Fully managed __ML-service__ to build apps with real-time personalized __recommendations__
-- Same technology used by Amazon.com
-- Integrates into existing websites, applications, SMS, email marketing systems, …
-
-# Textract
-
-- Automatically __extracts text__, handwriting, and data from any scanned documents using AI and ML
-- Read and process any type of document (PDFs, images, …)
 
 
 
