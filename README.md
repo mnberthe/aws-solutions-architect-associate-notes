@@ -2591,7 +2591,7 @@ Serverless performance monitoring service
  - Old version of the agent
  - Can only send to CloudWatch Logs
 
-__Can only send to CloudWatch Logs__
+__CloudWatch Unified Agent__
  - Collect additional system-level metrics such as RAM, processes, etc… 
  - Collect logs to send to CloudWatch Logs
  - Centralized configuration using SSM Parameter Store
