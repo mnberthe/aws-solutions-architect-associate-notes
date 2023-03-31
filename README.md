@@ -1515,10 +1515,9 @@ __FIFO Topics__
   
 ## Kinesis
 - Makes it easy to collect, process, and analyze streaming data in real-time
-- Ingest real-time data such as: Application logs, Metrics, Website clickstreams,
-IoT telemetry data…
+- Ingest real-time data such as: Application logs, Metrics, Website clickstreams, IoT telemetry data…
 
-### Kinesis Data Streams 
+__Kinesis Data Streams__
 - Real-time data streaming service
 - __Used to ingest data in real time directly from source__
 - Retention between 1 day to 365 days
@@ -1543,18 +1542,11 @@ IoT telemetry data…
    - Pay per stream per hour & data in/out per GB
   
   ![image](https://user-images.githubusercontent.com/35028407/225446271-ac6c3c50-515f-4fbe-afcd-5727bfdff773.png)
-
-### Amazon MQ
-
-- If you have some traditional applications running from on-premise, they may use open protocols such as __MQTT, AMQP, STOMP, Openwire, WSS, etc__. When migrating to the cloud, instead of re-engineering the application to use SQS and SNS (AWS proprietary), we can use Amazon MQ (managed Apache ActiveMQ) for communication. 
-- Doesn’t “scale” as much as SQS or SNS because it is provisioned 
-- Runs on a dedicated machine (can run in HA with failover)
-- __Has both queue feature (SQS) and topic features (SNS)__
  
-### Kinesis Data Firehose 
+__Kinesis Data Firehose__ 
 
 - Fully Managed Service, no administration, automatic scaling, serverless
-- Used to load streaming data into a target location with optional transformation
+- __Used to load streaming data into a target location with optional transformation__
 - Can ingest data in real time directly from source
 - Destinations:
   - __AWS: Redshift, S3, OpenSearch__
@@ -1565,6 +1557,12 @@ IoT telemetry data…
 
 ![image](https://user-images.githubusercontent.com/35028407/225447015-a7b9e3ee-e23a-48eb-81ca-2f85b8eeba66.png)
 
+### Amazon MQ
+
+- If you have some traditional applications running from on-premise, they may use open protocols such as __MQTT, AMQP, STOMP, Openwire, WSS, etc__. When migrating to the cloud, instead of re-engineering the application to use SQS and SNS (AWS proprietary), we can use Amazon MQ (managed Apache ActiveMQ) for communication. 
+- Doesn’t “scale” as much as SQS or SNS because it is provisioned 
+- Runs on a dedicated machine (can run in HA with failover)
+- __Has both queue feature (SQS) and topic features (SNS)__
 
 ### Event Bridge
 - __Schedule or Cron__ to create events on a schedule
@@ -2012,6 +2010,175 @@ __Same process with PostgreSQL__
 
 # Networking
 
+# Route 53
+
+- A highly available, scalable, fully managed and Authoritative DNS(cusutmer can update DNS records)
+- Route 53 is also a Domain Registrar
+- Ability to check the health of your resources
+- The only AWS service which provides 100% availability SLA
+
+__Hosted Zone__
+
+- A container for records that define how to route traffic to a domain and
+its subdomains
+- Hosted zone is queried to get the IP address from the hostname
+
+  __Two types__
+    - __Public Hosted Zone__
+       - resolves public domain names
+       - can be queried by anyone on the internet
+    - __Private Hosted Zone__
+       - resolves private domain names
+       - can only be queried from within the VPC
+
+__Record Types__
+
+Each record contains:
+  - __Domain/subdomain Name__ – e.g., example.com
+  - __Record Type__ – e.g., A or AAAA
+  - __Value__ – e.g., 12.34.56.78
+  - __Routing Policy__ – how Route 53 responds to queries
+  - __TTL__ – amount of time the record cached at DNS Resolvers
+
+- __A__ – maps a hostname to IPv4
+- __AAAA__ – maps a hostname to IPv6
+- __CNAME__ – maps a hostname to another hostname
+  - The target is a domain name which must have an A or AAAA record
+  - __Cannot point to root domains (Zone Apex)__ Ex: you can’t create a CNAME record for __example.com__, but you can create for __something.example.com__
+ 
+- __NS (Name Servers)__ - controls how traffic is routed for a domain
+- __Alias__ - maps a hostname to an AWS resource(app.mydomain.com => blabla.amazonaws.com)
+  - Native health check 
+  - AWS proprietary
+  - Can point to root (zone apex) and non-root domains
+  - __Alias Record is of type A or AAAA (IPv4 / IPv6)__
+  - Automatically recognizes changes in the resource’s IP addresses
+  - __You can’t set the TTL__
+  - Targets can be:
+    - Elastic Load Balancers
+    - CloudFront Distributions
+    - API Gateway
+    - Elastic Beanstalk environments
+    - S3 Websites
+    - VPC Interface Endpoints
+    - Global Accelerator accelerator
+  - __Target cannot be an EC2 DNS name__
+  
+  
+  __Routing Policies__
+  
+  Define how Route 53 responds to DNS queries
+  
+  __Simple__
+   - Route to one or more resources
+   - If multiple values are returned, client chooses one at random 
+   - No health check (if returning multiple resources, some of them might be unhealthy)
+   - When Alias enabled, you can only specify one Aws resource as a target
+
+  <img src ="https://user-images.githubusercontent.com/35028407/224734496-073f89af-49e1-4c2e-9213-eef3ef3411f9.png" width="400"/>
+  <img src ="https://user-images.githubusercontent.com/35028407/224734556-e325660a-ab50-46a4-80d8-9a53ffd8e110.png" width="400"/>
+
+
+__Weighted__
+
+- Control the % of the requests that go to each specific resource
+- Can be associated with Health Checks
+- __Use cases__: load balancing between regions, testing, new application versions…
+
+__Failover(Active-Passive)__
+- Primary & Secondary Records (if the primary application is down, route to secondary application)
+- __Health check__ must be associated with the primary record, you can also associate health check to secondary
+- Used for __Active-Passive__ failover strategy
+
+__Latency-based__
+
+- Redirect to the resource that has the lowest network latency
+- Latency is based on traffic between users and AWS Regions
+- Can be associated with Health Checks (has a failover capability)
+
+__Geolocation__
+
+- Routing based on the client's location
+- Specify location by Continent, Country
+- Should create a “Default” record (in case there’s no match on location)
+- __Use cases__: restrict content distribution & language preference
+- Can be associated with Health Checks
+
+__Geoproximity__
+
+- Route traffic to your resources based on the geographic location of users and
+resources 
+- Ability to __shift more or less traffic to resources__ based on the defined __bias__
+- To change the size of the geographic region, specify bias values:
+  - To expand (1 to 99) – more traffic to the resource
+  - To shrink (-1 to -99) – less traffic to the resource
+- To use geoproximity routing you must use Route 53 __Traffic Flow__
+
+__Multi-value__
+- Route traffic to multiple resources (max 8)
+- Health Checks (only healthy resources will be returned)
+- __Multi-value is not subsitute for having an ELB, it the client side load balancing
+- At difference of simple routing all response returned are healthy 
+  
+__Health Checks__
+- HTTP Health Checks are only for public resources
+- Automated for Automated DNS Failover
+- Three types:
+  - Monitor an endpoint (application or other AWS resource)
+    - Multiple global health checkers check the endpoint health
+    - Must configure the application firewall to allow incoming requests from the IPs of Route 53 Health Checkers
+    - Supported protocols: HTTP, HTTPS and TCP
+   - Monitor other health checks (__Calculated Health Checks__)
+     - Combine the results of multiple Health Checks into one (AND, OR, NOT)
+     - Specify how many of the health checks need to pass to make the parent pass
+     - Usage: perform maintenance to your website without causing all health checks to fail
+    - Monitor CloudWatch Alarms (to perform health check on private resources(Private Hosted Zone ))
+      - Route 53 health checkers are outside the VPC. They can’t access private endpoints (private VPC or on-premises resources).
+      - Create a CloudWatch Metric and associate a CloudWatch Alarm to it, then create a Health Check that checks the Cloud watch alarm.  
+
+## API Gateway
+
+- Serverless REST APIs
+- Invoke Lambda functions using REST APIs (API gateway will proxy the request to lambda)
+- Supports WebSocket (stateful)
+- Cache API responses
+- Can be integrated with any HTTP endpoint in the backend or any AWS API
+
+__API Gateway – Integrations__
+
+__Lambda Function__
+  - Invoke Lambda function 
+  - Easy way to expose REST API backed by AWS Lambda
+__HTTP__
+  - Expose HTTP endpoints in the backend 
+  - Example: internal HTTP API on premise, Application Load Balancer
+  - Why? Add __rate limiting, caching, user authentications, API keys, etc__
+__AWS Service__
+  - Expose any AWS API through the API Gateway
+  - Example: start an AWS Step Function workflow, post a message to SQS
+  - Why? Add authentication, deploy publicly, rate control
+
+
+__Endpoint Types__
+ - __Edge-Optimized (default):__
+   - For global clients
+   - Requests are routed through the CloudFront edge locations (improves latency)
+   - The API Gateway lives in only one region but it is accessible efficiently through edge locations 
+ - __Regional__
+   - For clients within the same region
+   - Could manually combine with your own CloudFront distribution for global deployment (this way you will have more control over the caching strategies and the distribution)
+ - __Private__
+   - Can only be accessed within your VPC using an Interface VPC endpoint (ENI)
+   - Use resource policy to define access
+  
+__Security__
+- __User Authentication through__
+  - __IAM Roles__ (useful for internal applications)
+  - __Cognito__ (identity for external users – example mobile users) 
+  - __Custom Authorizer__( Using lambda function to validate the token being passed in the header and return an lAM policy to determine if the user should be allowed to access the resource )
+- __Custom Domain Name HTTPS security through__ integration with AWS Certificate Manager (ACM) 
+
+
 ## VPC
 
 - VPC = Virtual Private Cloud
@@ -2067,6 +2234,7 @@ __NAT Gateway__
 - Preferred over NAT instances
 - NATGW is created in a specific Availability Zone, __uses an Elastic IP__
 - __Can’t be used by EC2 instance in the same subnet (only from other subnets)__
+- __Can't be shared accross VPCs(available only in one VPC)__
 - Requires an IGW (Private Subnet => NATGW => IGW)
 - __Created in a public subnet__
 - 5 Gbps of bandwidth with automatic scaling up to 45 Gbps
@@ -2324,158 +2492,6 @@ __Minimizing egress traffic network cost__
 <img width="800" alt="Capture d’écran 2023-03-24 à 18 15 16" src="https://user-images.githubusercontent.com/35028407/227595283-64401898-7ad0-4648-9cc1-ba979eb34177.png">
 
 
-# Route 53
-
-- A highly available, scalable, fully managed and Authoritative DNS(cusutmer can update DNS records)
-- Route 53 is also a Domain Registrar
-- Ability to check the health of your resources
-- The only AWS service which provides 100% availability SLA
-
-__Hosted Zone__
-
-- A container for records that define how to route traffic to a domain and
-its subdomains
-- Hosted zone is queried to get the IP address from the hostname
-
-  __Two types__
-    - __Public Hosted Zone__
-       - resolves public domain names
-       - can be queried by anyone on the internet
-    - __Private Hosted Zone__
-       - resolves private domain names
-       - can only be queried from within the VPC
-
-__Record Types__
-
-Each record contains:
-  - __Domain/subdomain Name__ – e.g., example.com
-  - __Record Type__ – e.g., A or AAAA
-  - __Value__ – e.g., 12.34.56.78
-  - __Routing Policy__ – how Route 53 responds to queries
-  - __TTL__ – amount of time the record cached at DNS Resolvers
-
-- __A__ – maps a hostname to IPv4
-- __AAAA__ – maps a hostname to IPv6
-- __CNAME__ – maps a hostname to another hostname
-  - The target is a domain name which must have an A or AAAA record
-  - __Cannot point to root domains (Zone Apex)__ Ex: you can’t create a CNAME record for __example.com__, but you can create for __something.example.com__
- 
-- __NS (Name Servers)__ - controls how traffic is routed for a domain
-- __Alias__ - maps a hostname to an AWS resource(app.mydomain.com => blabla.amazonaws.com)
-  - Native health check 
-  - AWS proprietary
-  - Can point to root (zone apex) and non-root domains
-  - __Alias Record is of type A or AAAA (IPv4 / IPv6)__
-  - Automatically recognizes changes in the resource’s IP addresses
-  - __You can’t set the TTL__
-  - Targets can be:
-    - Elastic Load Balancers
-    - CloudFront Distributions
-    - API Gateway
-    - Elastic Beanstalk environments
-    - S3 Websites
-    - VPC Interface Endpoints
-    - Global Accelerator accelerator
-  - __Target cannot be an EC2 DNS name__
-  
-  
-  __Routing Policies__
-  
-  Define how Route 53 responds to DNS queries
-  
-  __Simple__
-   - Route to one or more resources
-   - If multiple values are returned, client chooses one at random 
-   - No health check (if returning multiple resources, some of them might be unhealthy)
-   - When Alias enabled, you can only specify one Aws resource as a target
-
-  <img src ="https://user-images.githubusercontent.com/35028407/224734496-073f89af-49e1-4c2e-9213-eef3ef3411f9.png" width="400"/>
-  <img src ="https://user-images.githubusercontent.com/35028407/224734556-e325660a-ab50-46a4-80d8-9a53ffd8e110.png" width="400"/>
-
-
-__Weighted__
-
-- Control the % of the requests that go to each specific resource
-- Can be associated with Health Checks
-- __Use cases__: load balancing between regions, testing, new application versions…
-
-__Failover(Active-Passive)__
-- Primary & Secondary Records (if the primary application is down, route to secondary application)
-- __Health check__ must be associated with the primary record, you can also associate health check to secondary
-- Used for __Active-Passive__ failover strategy
-
-__Latency-based__
-
-- Redirect to the resource that has the lowest network latency
-- Latency is based on traffic between users and AWS Regions
-- Can be associated with Health Checks (has a failover capability)
-
-__Geolocation__
-
-- Routing based on the client's location
-- Specify location by Continent, Country
-- Should create a “Default” record (in case there’s no match on location)
-- __Use cases__: restrict content distribution & language preference
-- Can be associated with Health Checks
-
-__Geoproximity__
-
-- Route traffic to your resources based on the geographic location of users and
-resources 
-- Ability to __shift more or less traffic to resources__ based on the defined __bias__
-- To change the size of the geographic region, specify bias values:
-  - To expand (1 to 99) – more traffic to the resource
-  - To shrink (-1 to -99) – less traffic to the resource
-- To use geoproximity routing you must use Route 53 __Traffic Flow__
-
-__Multi-value__
-- Route traffic to multiple resources (max 8)
-- Health Checks (only healthy resources will be returned)
-- __Multi-value is not subsitute for having an ELB, it the client side load balancing
-- At difference of simple routing all response returned are healthy 
-  
-__Health Checks__
-- HTTP Health Checks are only for public resources
-- Automated for Automated DNS Failover
-- Three types:
-  - Monitor an endpoint (application or other AWS resource)
-    - Multiple global health checkers check the endpoint health
-    - Must configure the application firewall to allow incoming requests from the IPs of Route 53 Health Checkers
-    - Supported protocols: HTTP, HTTPS and TCP
-   - Monitor other health checks (__Calculated Health Checks__)
-     - Combine the results of multiple Health Checks into one (AND, OR, NOT)
-     - Specify how many of the health checks need to pass to make the parent pass
-     - Usage: perform maintenance to your website without causing all health checks to fail
-    - Monitor CloudWatch Alarms (to perform health check on private resources(Private Hosted Zone ))
-      - Route 53 health checkers are outside the VPC. They can’t access private endpoints (private VPC or on-premises resources).
-      - Create a CloudWatch Metric and associate a CloudWatch Alarm to it, then create a Health Check that checks the Cloud watch alarm.  
-
-## API Gateway
-
-- Serverless REST APIs
-- Invoke Lambda functions using REST APIs (API gateway will proxy the request to lambda)
-- Supports WebSocket (stateful)
-- Cache API responses
-- Can be integrated with any HTTP endpoint in the backend or any AWS API
--
-__Endpoint Types__
- - __Edge-Optimized (default):__
-   - For global clients
-   - Requests are routed through the CloudFront edge locations (improves latency)
-   - The API Gateway lives in only one region but it is accessible efficiently through edge locations 
- - __Regional__
-   - For clients within the same region
-   - Could manually combine with your own CloudFront distribution for global deployment (this way you will have more control over the caching strategies and the distribution)
- - __Private__
-   - Can only be accessed within your VPC using an Interface VPC endpoint (ENI)
-   - Use resource policy to define access
-  
-__Security__
-- __User Authentication through__
-  - IAM Roles (useful for internal applications)
-  - Cognito (identity for external users – example mobile users) 
-  - Custom Authorizer( Using lambda function to validate the token being passed in the header and return an lAM policy to determine if the user should be allowed to access the resource )
-- __Custom Domain Name HTTPS security through__ integration with AWS Certificate Manager (ACM) 
 
 # Content delivery
 
