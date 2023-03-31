@@ -3044,13 +3044,13 @@ __Secrets Manager – Multi-Region Secrets__
     - __Reflection attacks__
     - and other layer 3/layer 4 attacks  
  - __AWS Shield Advanced__
- - __DDoS mitigation service__ ($3,000 per month per organization)
-  - Protect against more sophisticated attack on
-    - EC2 instances
-    - Elastic Load Balancing (ELB)
-    - CloudFront
-    - Global Accelerator
-    - Route 53
+   - __DDoS mitigation service__ ($3,000 per month per organization)
+   - Protect against more sophisticated attack on
+      - EC2 instances
+      - Elastic Load Balancing (ELB)
+      - CloudFront
+      - Global Accelerator
+      - Route 53
    - 24/7 access to AWS __DDoS Response (DRP)__ team   
 
 
