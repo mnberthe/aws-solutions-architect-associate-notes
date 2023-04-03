@@ -401,6 +401,7 @@ __EC2 Launch Type__
 - __you must provision & maintain the infrastructure (the EC2 instances)__
 - EC2 instances have __ECS agent__ to register in the ECS Cluster 
 - AWS takes care of starting / stopping containers
+- Use case: Long running process, cost optimisation(possible to reserve EC2 or Spot)
 
 __Fargate Launch Type__
 - __Serverless__
@@ -408,6 +409,7 @@ __Fargate Launch Type__
 - You just create task definitions
 - AWS just runs ECS Tasks for you based on the CPU / RAM you need
 - To scale, just increase the number of tasks
+- Use case: When you want to run container for a little bit of time
 
 __IAM Roles for ECS__
 - __EC2 Instance Profile (EC2 Launch Type only):__
@@ -465,6 +467,9 @@ __EC2 Launch Type – Auto Scaling EC2 Instances__
 - Private and Public repository (Amazon ECR Public Gallery)
 - Fully integrated with ECS, backed by Amazon S3
 - Access is controlled through IAM policy
+- Lifecycle Rule to expire and remove unsed or older images
+- Caching public repos privately(ECR periodically reaches out to check current caching status)
+- __Tag Mutability__ Prevent image tags from being overwritten
 
 ## Elastic Kubernates Service
 
@@ -485,6 +490,20 @@ __EC2 Launch Type – Auto Scaling EC2 Instances__
 
 ![image](https://user-images.githubusercontent.com/35028407/226579427-81fcabdc-0dcd-4bdf-a982-e2b9bc33464b.png)
 
+
+__EKS Anywhere__
+
+- __on-premises way__ to manage Kubernetes (K8s) clusters with the same practices used for Amazon EKS
+- The key difference is you run thes clusters on premises 
+- Based on __EKS Distro__
+- Offers Operates of AWS full lifecycle management of multiple K8s clusters
+- __Operates independently of AWS__
+- __Control Plane__ K8s control plane management is operated completly by the custumer
+- __Location__ K8s control plane location entirely within a is within customer center or operations center
+
+__ECS Anywhere__
+- Feature of Amazon ECS allowing the management of container- based apps on-premises
+- No need to install and operate local container orchestration software, meaning more operational efficiency
 
 
 # High availability and scalability 
@@ -1567,7 +1586,7 @@ __Kinesis Data Firehose__
 ### Event Bridge
 - __Schedule or Cron__ to create events on a schedule
 - __Event Pattern__: Event rules to react to a service doing something
-- Trigger Lambda functions, send SQS/SNS messages
+- Target:  Trigger Lambda functions, send SQS/SNS messages etc
 
 
 # Data & Analytics
