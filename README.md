@@ -107,6 +107,7 @@
 
 ### Parameters & Encryption
 - [Key Management Service](#key-management-service)
+- [CloudHSM](#cloudhsm)
 - [SSM Parameter Store](#ssm-parameter-store)
 - [Secrets Manager](#secrets-manager)
 - [Certificate Manager](#certificate-manager)
@@ -2856,6 +2857,7 @@ __Service Control Policies (SCP)__
 Amazon Cognito lets you add user sign-up, sign-in, and access control to your web and mobile apps quickly and easily. Amazon Cognito scales to millions of users and supports sign-in with social identity providers, such as Apple, Facebook, Google, and Amazon, and enterprise identity providers via SAML 2.0 and OpenID Connect.
 
 __Cognito User Pools (CUP)__
+- __Users pools__ are directories of users that provide sign-up and sign-in options for your application users
 - __Create a serverless database of user for your web & mobile apps__
 - Integrate with API Gateway & Application Load Balancer
 - Multi-factor authentication (MFA)
@@ -2868,6 +2870,9 @@ __Cognito Identity Pools (Federated Identity)__
 - Example use case: provide temporary access to write to an S3 bucket after authenticating the user via FaceBook (using CUP identity federation)
 
 __Cognito vs IAM: “hundreds of users”, ”mobile users”, “authenticate with SAML”__
+
+<img width="920" alt="Capture d’écran 2023-04-04 à 07 51 00" src="https://user-images.githubusercontent.com/35028407/229699628-23c02ff3-94c8-4444-afea-d2665ca41cbb.png">
+
 
 # AWS Directory Services
 - __AWS Managed Microsoft AD__
@@ -2982,6 +2987,18 @@ __AMI Sharing Process Encrypted via KMS__
 - The IAM Role/User in the target account must have the permissions to DescribeKey, ReEncrypted, CreateGrant, Decrypt
 - When launching an EC2 instance from the AMI, optionally the target account can specify a new KMS key in its own account to re-encrypt the volumes
 
+## CloudHSM
+- A hardware security module(HSM)is a physical computing device that safeguards and manages digital keys and performs encryption and decryption functions.
+- __An HSM contains one or more secure cryptoprocessor chips__
+- AWS provisions __dedicated encryption hardware__ (Hardware Security Module)
+- Use when you want to manage encryption keys completely
+- HSM device is stored in AWS (tamper resistant, FIPS 140-2 Level 3 compliance)
+- Supports both __symmetric and asymmetric encryption__
+- Good option to use with __SSE-C__ encryption
+- CloudHSM clusters are spread across __Multi AZ (high availability)__
+- IAM permissions are required to perform CRUD operations on HSM cluster
+- __CloudHSM Software__ is used to manage the keys and users (in KMS, everything is managed using IAM)
+
 ## SSM Parameter Store
 - Secure storage for configuration and secrets
 - Optional Seamless Encryption using KMS
@@ -2989,6 +3006,10 @@ __AMI Sharing Process Encrypted via KMS__
 - Security through IAM
 - Notifications with Amazon EventBridge
 - Integration with CloudFormation
+- Difference with secret manager:
+  - __SSM Parameter store is free, secret manager is not__
+  - Limit to the number of parameters you can store(10000)
+  - No key rotation
 
 __Parameter Tiers__
 
@@ -3057,7 +3078,7 @@ __Secrets Manager – Multi-Region Secrets__
 
 - __DDoS__: Distributed Denial of Service – many requests at the same time
 - __AWS Shield Standard__
-  - Free service that is activated for every AWS customer
+  - __Free DDOS protection service__ that is activated for every AWS customer
   - Provides protection from attacks such a
     - __SYN/UDP Floods__
     - __Reflection attacks__
@@ -3103,11 +3124,19 @@ __Secrets Manager – Multi-Region Secrets__
 
 ## Inspector
 
+- Amazon Inspector is an automated security assessment service that helps improve the security and compliance of applications deployed on AWS
 - Automated Security Assessments 
 - For :
   - __EC2 instances__ using __System Manager (SSM) Agent__ running on EC2 instances 
   - __Amazon ECR__ - Assessment of containers as they are pushed to __ECR__
   - __Lambda Functions__ Identifies software vulnerabilities in function code and package dependencies
+  - __2 Types of assessment__
+    - __Network Assessments__
+      - Network configuration analysis to checks for ports reachable from outsive the VPC
+      - Inspector agent is not required
+    - __Host Assessments__
+      - Vulnerability software(CVE), host hardening(CIS benchmarks), and security best practices
+      - Inspector agent is required
 
 - Integration with __AWS Security Hub__
 - Send findings to Amazon __Event Bridge__
