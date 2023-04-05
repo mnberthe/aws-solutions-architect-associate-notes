@@ -126,7 +126,7 @@
 
 ### Docs
 
-[AWS Well Architected]([https://aws.amazon.com/fr/architecture/well-architected](https://docs.aws.amazon.com/pdfs/wellarchitected/latest/framework/wellarchitected-framework.pdf#welcome))
+[AWS Well Architected](https://docs.aws.amazon.com/pdfs/wellarchitected/latest/framework/wellarchitected-framework.pdf#welcome)
 
 [AWS reference architectures](https://aws.amazon.com/fr/architecture/)
 
