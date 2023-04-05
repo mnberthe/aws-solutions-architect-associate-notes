@@ -1818,6 +1818,8 @@ __Data migration__
  
 ## DataSync
 
+- DataSync is used primarily for one-time migrations
+- Agent Based : An agent needs to be installed on the on premise data center
 - Move large amount of data to and from 
   - On-premises / other cloud to AWS (NFS, SMB, HDFS, S3 API…) – needs agent
   - AWS to AWS (different storage services) – no agent needed
@@ -1833,7 +1835,7 @@ __Data migration__
  
 ## Transfer Family
 
-- AWS managed service to transfer files in and out of Simple Storage Service (S3) or EFS using FTP (instead of using proprietary methods)
+- AWS managed service to transfer files in and out of Simple Storage Service (S3) or EFS __using FTP (instead of using proprietary methods)__
 - Supported Protocols
   - FTP (File Transfer Protocol) - unencrypted in flight
   - FTPS (File Transfer Protocol over SSL) - encrypted in flight
@@ -1846,8 +1848,12 @@ __Data migration__
 
 ## Database Migration Service
 - Migrate entire __databases__ from on-premises to __AWS cloud__
-- __The source database remains available during migration__
-- Continuous Data Replication using __CDC (change data capture)__
+- __The source database remains available during migration__ 
+- Continuous Data Replication using __CDC (change data capture)__ of the target database
+- __Replication type__ 
+  - full load, all existing data is moved from sources to targets in parallel.
+  - full load plus captures changes to source tables during migration. CDC __guarantees transactional integrity__
+  - CDC only, Only replicate the data changes from the source database.
 - Requires __EC2 instance running the DMS software__ to perform the replication tasks. If the amount of data is large, use a large instance. If multi-AZ is enabled, need an instance in each AZ.
 
 __Types of Migration__
@@ -1876,9 +1882,11 @@ __AWS Application Discovery Service__
 - Plan migration projects by gathering information about on-premises data centers
 - Server utilization data and dependency mapping are important for migrations
 - Two types of migration:
-  - __Agentless Discovery (AWS Agentless Discovery Connector)__
+  - __Agentless Discovery Via (AWS Agentless Discovery Connector)__
+    - Agentless Discovery Connector within VMware vCenter
     - VM inventory, configuration, and performance history such as CPU, memory, and disk usage
-  - __Agent-based Discovery (AWS Application Discovery Agent)__
+  - __Agent-based Discovery Via (AWS Application Discovery Agent)__
+    - Install Application Discovery Agent on each VM and each physical server  
     - System configuration, system performance, running processes, and details of the network connections between systems    
 - Resulting data can be viewed within AWS Migration Hub 
 
@@ -2718,7 +2726,7 @@ __CloudWatch Insights and Operational Visibility__
 
 # Config
 - Helps with auditing and recording __compliance__ of your AWS resources
-- Record configurations changes over time
+- __Record configurations changes over time__
 - __Evaluate compliance of resources using config rules__
 - Does not prevent non-compliant actions from happening (no deny)
 - Questions that can be solved by AWS Config:
@@ -2840,6 +2848,35 @@ __Service Control Policies (SCP)__
 - Must have an explicit allow (does not allow anything by default – like IAM)
 - __Explicit Deny__ has the highest precedence
 
+__Sharing Resources with AWS RAM__
+
+- AWS __Resource Access Manager (RAM)__ is a free service that allows you to __share__ resources with __other accounts__ AWS and within your __organization__
+- AWS RAM allow you to easily share resources rather than having to create __duplicate copies in your different accounts__.
+- __Resources are__ :
+  - VPC subnets 
+  - Transit Gateway
+  - Route 53 Resolver
+  - Licence Manager
+  - Dedicated Host
+  - etc ...
+
+__RAM vs. VPC Peering__
+
+- When should you use VPC peering or RAM?
+- Are you sharing resources within the same region? __Use RAM__.
+- Are you sharing across regions? __Use VPC peering.__
+- If RAM isn’t available and VPC peering is, that’s still a great option!
+
+__Cross Account Role Access__
+- As the number of AWS accounts you manage __increases__, you will need to set up cross-account access. 
+- Duplicating __IAM accounts__ creates a security __vulnerability__. 
+- Cross-account role access gives you the ability to set up __temporary access__(assume role) you can easily __control__.
+
+
+<img width="920" alt="Capture d’écran 2023-04-05 à 06 39 12" src="https://user-images.githubusercontent.com/35028407/229982507-785ef35d-ee03-42aa-9bbe-b60692edc449.png">
+
+
+
 ## SSO 
 
 - For __Single Sign-On__ called now __IAM Identity Center__
@@ -2879,12 +2916,17 @@ __Cognito vs IAM: “hundreds of users”, ”mobile users”, “authenticate w
 - Create your own AD in AWS, manage users locally, supports MFA
 - Establish “trust” connections with your __on- premises AD__
 
+__Managed Microsoft AD__
+- This is the entire AD suite
+- You can easuly build out AD in AWS
 
 __AD Connector__
+- Creates a tunel between __AWS__ and your __on premises AD__
 - Directory Gateway (proxy) to redirect to on- premises AD, supports MFA
 - Users are managed on the on-premises AD
 
 __Simple AD__
+- Standalone directory powered by Linux Samba Active Directory-compatible server
 - AD-compatible managed directory on AWS
 - Cannot be joined with on-premises AD
 
@@ -2899,8 +2941,22 @@ __Simple AD__
   - Monitor compliance through an interactive dashboard
 - __Guardrails__
   - Provides ongoing governance for your Control Tower environment (AWS Accounts)
-  - __Preventive Guardrail__ – using SCPs (e.g., Restrict Regions across all your accounts)  
-  - __Detective Guardrail__ – using AWS Config (e.g., identify untagged resources)
+  - __Preventive Guardrail__  
+    - Ensures accounts maintain governance by __disallowing violating actions__ 
+    - Leverages service control policies
+    - using SCPs (e.g., Restrict Regions across all your accounts)  
+  - __Detective Guardrail__ 
+    - Detects and alerts on noncompliant resources within all accounts
+    - Leverages AWS Config rules
+    – Using AWS Config (e.g., identify untagged resources)
+  
+__Features and Terms to Know__
+- __Landing zone__: Well-architected, multi-account environment based on compliance and security best practices
+- __Guardrails__: High-level rules providing continuous governance for the AWS environment
+- __Account Factory__: Configurable account template for standardizing pre-approved configs of new accounts
+- __CloudFormation StackSet__: Automated deployments of templates deploying repeated resources for governance
+- __Shared accounts__: Three accounts used by Control Tower created during landing zone creation
+
 
 # Parameters & Encryption
 
