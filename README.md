@@ -654,6 +654,26 @@ The goal of an Auto Scaling Group (ASG) is to:
  - __Predictive Scaling__
     - Historical data is used to predict the load pattern using ML and scale automatically
 
+### Launch Configuration & Launch Template
+-  Defines the following info for ASG
+    -   AMI (Instance Type)
+    -   EC2 User Data
+    -   EBS Volumes
+    -   Security Groups
+    -   SSH Key Pair
+    -   Min / Max / Desired Capacity
+    -   Subnets (where the instances will be created)
+    -   Load Balancer (specify which ELB to attach instances)
+    -   Scaling Policy
+-   **Launch Configuration**  (legacy)
+    -   Cannot be updated (must be re-created)
+    -   **Does not support Spot Instances**
+-   **Launch Template**  (newer)
+    -   Versioned
+    -   Can be updated
+    -   **Supports both On-Demand and Spot Instances**
+    -   Recommended by AWS
+
 __Cooldown__ 
  - After a scaling activity happens, the ASG goes into cooldown period (default 300 seconds) during which it does not launch or terminate additional instances (ignores scaling requests) to allow the metrics to stabilize.
  - Use a ready-to-use AMI to launch instances faster to be able to reduce the cooldown period
@@ -1209,6 +1229,21 @@ __RDS Proxy__
   - __Reduced RDS & Aurora failover time by up 66%__
   - __Enforce IAM Authentication for DB, and securely store credentials in AWS Secrets Manager__
   - __RDS Proxy is never publicly accessible (must be accessed from VPC)__
+
+### RDS Custom
+
+- **Managed Oracle and Microsoft SQL Server Database with OS and database customization**
+- RDS: Automates setup, operation, and scaling of database in AWS
+- Custom: access to the underlying database and OS so you can
+	- Configure settings
+	- Install patches 
+	- Enable native features
+	- Access the underlying EC2 Instance using SSH or SSM Session Manager
+- **De-activate Automation Mode**  to perform your customization
+- RDS vs. RDS Custom
+	- RDS: entire database and the OS to be managed by AWS
+	- RDS Custom: full admin access to the underlying OS and the database 
+
 
 ## Amazon Aurora
 - Aurora is a proprietary technology from AWS (not open sourced)
