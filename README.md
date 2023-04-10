@@ -2326,12 +2326,14 @@ __Network Access Control List (NACL)__
 - __New subnets are assigned the Default NACL__
 - __Default NACL allows all inbound & outbound requests__
 - New NACL rule By default deny all inbound and outbound traffic until you add rules
+- __* All Traffic Deny__ This rule ensures that if a packet doesn't match any of the other numbered rules, it's denied. __You can't modify or remove this rule.__
+
 - __NACL Rules__:
   - Based only on IP addresses
   - Rules number: 1-32766 (lower number has higher precedence)
   - First rule match will drive the decision
   - The last rule denies the request (only when no previous rule matches)
-
+  - Each subnet in your VPC must be associated with a network ACL. If you don't explicitly associate a subnet with a network ACL, the subnet is automatically associated with the default network ACL.
 
 __NACL vs Security Group__
 
@@ -2343,7 +2345,10 @@ __NACL vs Security Group__
    - Firewall for EC2 instances
    - Supports only Allow rules
    - __Stateful__ return traffic is automatically allowed,regardless of any rules
+   - __You can't delete the default security group, however, you can change the default SG rules__
+   - You can assign up to five security groups to the instance.
 
+   
 ![image](https://user-images.githubusercontent.com/35028407/227431682-2fa029ab-e6c1-4211-a512-ddadf3f9d095.png)
 
 
