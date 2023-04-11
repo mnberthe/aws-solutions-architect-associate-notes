@@ -194,6 +194,8 @@ __Security group__
 - __It’s good to maintain one separate security group for SSH access__
 - If your application is not accessible (time out), then it’s a security group issue
 - If your application gives a “connection refused“ error, then it’s an application error or it’s not launched
+- __You can't delete the default security group, however, you can change the default SG rules__
+- You can assign up to five security groups to the instance.
 
 __EC2 Instances Purchasing Options__
 
@@ -2345,8 +2347,7 @@ __NACL vs Security Group__
    - Firewall for EC2 instances
    - Supports only Allow rules
    - __Stateful__ return traffic is automatically allowed,regardless of any rules
-   - __You can't delete the default security group, however, you can change the default SG rules__
-   - You can assign up to five security groups to the instance.
+
 
    
 ![image](https://user-images.githubusercontent.com/35028407/227431682-2fa029ab-e6c1-4211-a512-ddadf3f9d095.png)
