@@ -2595,6 +2595,15 @@ __CloudFront Geo Restriction__
   - The “country” is determined using a 3rd party Geo-IP database
   - Use case: Copyright Laws to control access to content
 
+__Signed URL / Cookies__
+- Used to make a __CloudFront distribution private__ (distribute to a subset of users)
+- Signed URL ⇒ access to individual files
+- Signed Cookies ⇒ access to multiple files
+- Whenever we create a signed URL / cookie, we attach a policy specifying:
+	- __URL / Cookie Expiration (TTL)__
+	- __IP ranges__ allowed to access the data 
+	- Trusted signers (which AWS accounts can create signed URLs)
+
 __Pricing__
 
 - Price Class All: all regions (best performance)
@@ -3202,6 +3211,14 @@ __Secrets Manager – Multi-Region Secrets__
   - AWS Network Firewall (VPC Level)
   - Amazon Route 53 Resolver DNS Firewall
   - Policies are created at the region level
+  
+## Security Hub
+
+- Security Hub is a service provided by Amazon Web Services (AWS) that gives users a comprehensive view of their security posture across their AWS accounts.
+- It provides a centralized dashboard that aggregates and prioritizes security findings from various AWS services such as
+	- Amazon GuardDuty
+	- AWS Config
+	- AWS Inspector, and others
 
 ## GuardDuty
 
@@ -3235,6 +3252,7 @@ __Secrets Manager – Multi-Region Secrets__
     - __Host Assessments__
       - Vulnerability software(CVE), host hardening(CIS benchmarks), and security best practices
       - Inspector agent is required
+  - __Amazon Inspector is a vulnerability management service that continuously scans your AWS workloads for vulnerabilities. It is not an intrusion detection service.__ 
 
 - Integration with __AWS Security Hub__
 - Send findings to Amazon __Event Bridge__
