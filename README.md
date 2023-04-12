@@ -163,14 +163,15 @@ You can use different types of EC2 instances that are optimised for different us
 __General Purpose__
  - Great for a diversity of workloads such as __web servers or code repositories__
  - Balance between __Compute, Memory, Networking__
+ 
 __Compute Optimize__
  - Great for compute-intensive tasks that require high performance processors:
-  - Batch processing workloads
-  - Media transcoding
-  - High performance web servers
-  - High performance computing (HPC)
-  - Scientific modeling & machine learning
-  - Dedicated gaming servers
+	  - Batch processing workloads
+	  - Media transcoding
+	  - High performance web servers
+	  - High performance computing (HPC)
+	  - Scientific modeling & machine learning
+	  - Dedicated gaming servers
 
 __Memory Optimized__
  - Fast performance for workloads that process large data sets in memory 
@@ -185,10 +186,10 @@ __Storage Optimized__
 __Security group__
 - Security groups are acting as a “firewall” on EC2 instances
 - They regulate: 
-- Access to Ports
-- Authorised IP ranges – IPv4 and IPv6
-- Control of inbound network (from other to the instance)
-- Control of outbound network (from the instance to other)
+	- Access to Ports
+	- Authorised IP ranges – IPv4 and IPv6
+	- Control of inbound network (from other to the instance)
+	- Control of outbound network (from the instance to other)
 - All inbound traffic is __blocked__ by default
 - All outbound traffic is __allowed__.
 - __It’s good to maintain one separate security group for SSH access__
@@ -279,12 +280,12 @@ You can attach 3 different types of __virtual networking cards__ to your EC2.
 
 __ENI(Elastic Network Interface)__
 - An ENI is simply a virtual network card that allows:
-- Private IPv4 addresses 
-- Public Ipv4 Address
-- Many IPV6
-- One Elastic IP (IPv4) per private IPv4
-- Mac Address
-- 1 or More SG
+	- Private IPv4 addresses 
+	- Public Ipv4 Address
+	- Many IPV6
+	- One Elastic IP (IPv4) per private IPv4
+	- Mac Address
+	- 1 or More SG
 - You can create ENI independently and attach them on the fly (move them) on EC2 instances for failover
 - Bound to a specific availability zone (AZ)
 
@@ -371,7 +372,7 @@ __Networking__
 
 __ECS Componenets__
 - __Clusters__
-  - An Amazon ECS cluster is a logical grouping of __asks or services__.
+  - An Amazon ECS cluster is a logical grouping of __Tasks or services__.
   - You can use clusters to isolate your applications, This way, they don't use the same underlying infrastructure
   - When your tasks are run on Fargate, your cluster resources are also managed by Fargate 
 - __Task definitions__
