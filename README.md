@@ -702,6 +702,9 @@ __No Relational Database scaling__
 
 # Storage
 
+![image](https://user-images.githubusercontent.com/35028407/232171914-bfd3b494-12b8-44b0-bbdf-129c65695991.png)
+
+
 ## S3
 - Remember that S3 is Object-based: i.e allows you to upload files.
 - Files can be 0 Bytes to 5 TB.
@@ -2963,13 +2966,14 @@ __Cognito vs IAM: “hundreds of users”, ”mobile users”, “authenticate w
 
 
 # AWS Directory Services
-- __AWS Managed Microsoft AD__
-- Create your own AD in AWS, manage users locally, supports MFA
-- Establish “trust” connections with your __on- premises AD__
 
 __Managed Microsoft AD__
 - This is the entire AD suite
-- You can easuly build out AD in AWS
+- You can easily build out AD in AWS
+- Login credentials are shared between on-premise and AWS managed AD
+- __Manage users on both AD (on-premise and on AWS managed AD)__
+- Establish “trust” connections with your on- premises AD
+- Supports MFA
 
 __AD Connector__
 - Creates a tunel between __AWS__ and your __on premises AD__
@@ -2977,6 +2981,7 @@ __AD Connector__
 - Users are managed on the on-premises AD
 
 __Simple AD__
+-  provides a __subset of the features__ offered by AWS __Managed Microsoft AD__, including the ability to manage user accounts and group memberships, create and apply group policies, securely connect to Amazon EC2 instances, and provide Kerberos-based single sign-on (SSO). 
 - Standalone directory powered by Linux Samba Active Directory-compatible server
 - AD-compatible managed directory on AWS
 - Cannot be joined with on-premises AD
