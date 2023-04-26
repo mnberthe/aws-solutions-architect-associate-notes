@@ -845,11 +845,13 @@ __S3 Standard – General Purpose__
   - Used for frequently accessed data
   - Low latency and high throughput
   - The default storage class
+  - __No minimum storage duration__
   - Use cases include websites, content distribution, mobile and gaming applications, and big data analytics
 
 __S3 Standard-Infrequent Access (S3 Standard-IA)__
   - __Infrequently accessed data(once a month)__
   - __Rapid Access__: Used for data that is accessed less frequently but requires rapid access when needed.
+  - Minimum storage duration of __30 days__
   - There is a low per-GB storage price and a per-GB retrieval fee
   - Use cases: __Disaster Recovery, backups__
 
@@ -869,14 +871,14 @@ __S3 Glacier__
     - Expedited (1 to 5 minutes)  
     - Standard (3 to 5 hours)
     - Bulk (5 to 12 hours)
-  - Minimum storage duration of 90 days
+  - Minimum storage duration of __90 days__
 
 - __Amazon S3 Glacier Deep Archive – for long term storage__
   - __Data accessed once a year__
   - 2 flexible retrieval: 
     - Standard (12 hours)  
     - Bulk (48 hours)
-  - Minimum storage duration of 180 days
+  - Minimum storage duration of __180 days__
 
 __S3 Lifecycle Management__
 - Lifecycle management automates moving your objects between thedifferent storage tiers, thereby maximizing cost effectiveness.
