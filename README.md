@@ -958,6 +958,13 @@ __EBS HDD__
 - __st1 (HDD)__ Low cost HDD volume designed for frequently accessed, throughput- intensive workloads
 - __sc1 (HDD)__ Lowest cost HDD volume designed for less frequently accessed workloads
 
+__Tips__
+
+- Amazon EBS provides three volume types to best meet the needs of your workloads: General Purpose (SSD), Provisioned IOPS (SSD), and Magnetic.
+- __General Purpose (SSD)__ is the new, SSD-backed, general purpose EBS volume type that is recommended as the default choice for customers. General Purpose (SSD) volumes are suitable for a broad range of workloads, including small to medium-sized databases, development and test environments, and boot volumes.
+- __Provisioned IOPS (SSD)__ volumes offer storage with consistent and low-latency performance and are designed for I/O intensive applications such as large relational or NoSQL databases. Magnetic volumes provide the lowest cost per gigabyte of all EBS volume types.
+- __Magnetic volumes__ are ideal for workloads where data are accessed infrequently, and applications where the lowest storage cost is important. Take note that this is a Previous Generation Volume. The latest low-cost magnetic storage types are Cold HDD (sc1) and Throughput Optimized HDD (st1) volumes.
+
 __EBS Encryption__
 
 - For Encrypted EBS volumes:
