@@ -845,14 +845,14 @@ __S3 Standard – General Purpose__
   - Used for frequently accessed data
   - Low latency and high throughput
   - The default storage class
-  - Minimum storage __N/A__
+  - Minimum storage __N/A__ but for Transition from S3 Standard or S3 Standard-IA to S3 Standard-IA or S3 One Zone-IA there is a minimum __30__ days duration
+  - This limitation does not apply to INTELLIGENT_TIERING, GLACIER, and DEEP_ARCHIVE storage class.
   - Use cases include websites, content distribution, mobile and gaming applications, and big data analytics
 
 __S3 Standard-Infrequent Access (S3 Standard-IA)__
   - __Infrequently accessed data(once a month)__
   - __Rapid Access__: Used for data that is accessed less frequently but requires rapid access when needed.
-  - Minimum storage duration of __30 days__  for Transition from S3 Standard or S3 Standard-IA to S3 Standard-IA or S3 One Zone-IA
-  - This limitation does not apply to INTELLIGENT_TIERING, GLACIER, and DEEP_ARCHIVE storage class.
+  - Minimum storage duration of __30 days__ 
   - There is a low per-GB storage price and a per-GB retrieval fee
   - Use cases: __Disaster Recovery, backups__
 
