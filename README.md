@@ -845,7 +845,7 @@ __S3 Standard – General Purpose__
   - Used for frequently accessed data
   - Low latency and high throughput
   - The default storage class
-  - Minimum storage duration of __30 days__
+  - Minimum storage __N/A__
   - Use cases include websites, content distribution, mobile and gaming applications, and big data analytics
 
 __S3 Standard-Infrequent Access (S3 Standard-IA)__
