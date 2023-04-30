@@ -859,6 +859,7 @@ __S3 Standard-Infrequent Access (S3 Standard-IA)__
 __S3 Intelligent-Tiering__
   - Data with changing or unknown access patterns
   - Automatically moves your data to the most cost-effective tier based on how frequently you access each object.
+  - Minimum storage duration of __30 days__ 
 
 __S3 Glacier__
 - Low-cost object storage meant for archiving / backup
